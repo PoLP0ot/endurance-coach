@@ -1,0 +1,70 @@
+"""Auth dependencies: validate Supabase JWT and resolve the current user."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from fastapi import Depends, Header, HTTPException, status
+from jose import JWTError, jwt
+
+from app.core.config import settings
+
+
+@dataclass(frozen=True)
+class CurrentUser:
+    """Identity extracted from a verified Supabase JWT."""
+
+    id: str
+    email: str | None
+    role: str
+    claims: dict
+
+
+def _decode_token(token: str) -> dict:
+    """Verify and decode a Supabase JWT.
+
+    Supabase issues HS256 tokens signed with the project JWT secret. We verify
+    signature, audience and expiry. Raises JWTError on any failure.
+    """
+    if not settings.supabase_jwt_secret:
+        raise JWTError("SUPABASE_JWT_SECRET not configured")
+    return jwt.decode(
+        token,
+        settings.supabase_jwt_secret,
+        algorithms=[settings.jwt_algorithm],
+        audience=settings.jwt_audience,
+        options={"verify_aud": True},
+    )
+
+
+async def get_current_user(
+    authorization: str | None = Header(default=None),
+) -> CurrentUser:
+    """FastAPI dependency. Requires a valid `Authorization: Bearer <jwt>`."""
+    credentials_exc = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise credentials_exc
+
+    token = authorization.split(" ", 1)[1].strip()
+    try:
+        payload = _decode_token(token)
+    except JWTError:
+        raise credentials_exc from None
+
+    sub = payload.get("sub")
+    if not sub:
+        raise credentials_exc
+
+    return CurrentUser(
+        id=sub,
+        email=payload.get("email"),
+        role=payload.get("role", "authenticated"),
+        claims=payload,
+    )
+
+
+# Type alias for cleaner route signatures
+CurrentUserDep = Depends(get_current_user)

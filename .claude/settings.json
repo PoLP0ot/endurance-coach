@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash(git *)",
+      "Bash(uv run *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(python3 *)",
+      "Bash(pytest *)",
+      "Bash(ruff *)",
+      "Bash(pip *)",
+      "Bash(docker *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(echo *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
+      "Bash(cd *)",
+      "Bash(curl *)",
+      "Bash(npx prisma *)",
+      "Bash(npx vitest *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)"
+    ]
+  }
+}

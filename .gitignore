@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.py[cod]
+.pnpm-store/
+
+# Builds
+web/.next/
+web/out/
+web/build/
+dist/
+
+# Env
+.env
+.env.local
+.env*.local
+*.env
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Test / coverage
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
