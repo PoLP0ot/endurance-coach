@@ -6,6 +6,7 @@
       "Edit",
       "Write",
       "Bash(git *)",
+      "Bash(git commit *)",
       "Bash(uv run *)",
       "Bash(npm *)",
       "Bash(npx *)",
