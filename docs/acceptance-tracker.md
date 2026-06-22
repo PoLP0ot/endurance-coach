@@ -10,7 +10,7 @@
 ## Phase 1 — design system
 - [x] 1.1 design tokens (warm-stone light, 3px) — commit b1734cd
 - [x] 1.x visual harness (Playwright) — commit ba5d753
-- [ ] 1.2 primitives: Button variants (primary/ghost/sm/block)
+- [x] 1.2 primitives: Button variants (Inter Tight 600, primary→accent-dk hover, outline=bordered ghost)
 - [ ] 1.2 primitives: Pill/Badge (free/premium)
 - [x] 1.2 primitives: Field (mono uppercase label + paper input, focus-orange) — commit pending
 - [ ] 1.2 primitives: CoachCard (ai-dot + THIS WEEK badge)
