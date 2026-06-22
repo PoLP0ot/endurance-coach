@@ -12,6 +12,7 @@ const PUBLIC_ROUTES: Array<{ name: string; path: string }> = [
   { name: "forgot-password", path: "/forgot-password" },
   { name: "onboarding", path: "/onboarding" },
   { name: "pricing", path: "/pricing" },
+  { name: "coachonboard", path: "/coachonboard" },
 ];
 
 for (const route of PUBLIC_ROUTES) {
