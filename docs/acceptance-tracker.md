@@ -47,7 +47,8 @@
 ### Onboarding connect-garmin (O1–O4)
 - [ ] O1 layout · O2 connect+progress+redirect · O3 errors+retry · O4 skip+banner
 ### Dashboard (D1–D7)
-- [ ] D1 nav/topbar · D2 period/subtitle · D3 metric cards · D4 load chart · D5 recent activities · D6 coach note · D7 states
+- [x] D1 nav/topbar (shell) · [x] D3 metric cards (mono label + 40px tabular) · [x] D4 load chart · [x] D6 coach note (Coach's Assessment card + THIS WEEK badge)
+- [ ] D2 dynamic week period/subtitle · D5 recent activities list · D7 full states · goal-banner · This-Week table · key signals (need backend goal/recent data)
 ### Activity detail (A1–A5)
 - [ ] A1 header/map · A2 metrics · A3 chart · A4 AI analysis · A5 laps
 ### Coach chat (C1–C6)

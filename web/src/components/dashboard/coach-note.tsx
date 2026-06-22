@@ -3,17 +3,27 @@ interface CoachNoteProps {
   detail: string;
 }
 
-/** Coach-first narrative shown before raw data (US2, coach-first philosophy). */
+/** Coach's Assessment card (prototype): ai-dot header + THIS WEEK badge, then narrative. */
 export function CoachNote({ headline, detail }: CoachNoteProps) {
   return (
     <section
       aria-label="Coach summary"
-      className="rounded-md border-l-2 border-primary bg-secondary/40 p-5"
+      className="rounded border border-line bg-card"
     >
-      <h2 className="font-display text-xl font-semibold tracking-tight">
-        {headline}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+      <div className="flex items-center gap-2.5 px-6 pt-4">
+        <span className="h-2 w-2 flex-none rounded-full bg-primary" aria-hidden />
+        <h2 className="font-display text-sm font-semibold text-ink">
+          Coach&apos;s Assessment
+        </h2>
+        <span className="ml-auto font-mono text-[9px] uppercase tracking-[0.14em] text-primary">
+          This week
+        </span>
+      </div>
+      <div className="px-6 pb-5 pt-3.5">
+        <p className="text-[15px] leading-[1.72] text-ink-soft">
+          <b className="font-semibold text-ink">{headline}</b> {detail}
+        </p>
+      </div>
     </section>
   );
 }
