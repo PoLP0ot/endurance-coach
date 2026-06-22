@@ -36,8 +36,12 @@ class Settings(BaseSettings):
     # Queue / Email / Payments
     redis_url: str = "redis://localhost:6379"
     resend_api_key: str = ""
+    email_from: str = "Endurance Coach <coach@endurancecoach.app>"
     paddle_api_key: str = ""
     paddle_webhook_secret: str = ""
+    paddle_client_token: str = ""
+    paddle_price_id: str = ""
+    paddle_environment: str = "sandbox"
 
     # Security
     encryption_key: str = ""

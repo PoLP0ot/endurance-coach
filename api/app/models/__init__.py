@@ -7,6 +7,7 @@ from app.models.garmin import GarminConnection
 from app.models.health import DailyHealth
 from app.models.import_job import ImportJob
 from app.models.plan import TrainingPlan
+from app.models.subscription import Subscription
 from app.models.user import User
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "DailyHealth",
     "ImportJob",
     "TrainingPlan",
+    "Subscription",
 ]
