@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.routers import activities, dashboard, garmin, health
+from app.routers import activities, chat, dashboard, garmin, health
 
 
 def create_app() -> FastAPI:
@@ -55,6 +55,7 @@ def create_app() -> FastAPI:
     app.include_router(garmin.router)
     app.include_router(dashboard.router)
     app.include_router(activities.router)
+    app.include_router(chat.router)
     return app
 
 
