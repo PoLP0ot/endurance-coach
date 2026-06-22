@@ -12,7 +12,7 @@
 - [x] 1.x visual harness (Playwright) — commit ba5d753
 - [ ] 1.2 primitives: Button variants (primary/ghost/sm/block)
 - [ ] 1.2 primitives: Pill/Badge (free/premium)
-- [ ] 1.2 primitives: Field (mono uppercase label)
+- [x] 1.2 primitives: Field (mono uppercase label + paper input, focus-orange) — commit pending
 - [ ] 1.2 primitives: CoachCard (ai-dot + THIS WEEK badge)
 - [ ] 1.2 primitives: Metric (4-up grid, 40px tabular value)
 - [ ] 1.2 primitives: GoalBanner (dark gradient + progress bar)
@@ -38,7 +38,7 @@
 ### Landing (L1–L7)
 - [ ] L1 hero · L2 how-it-works · L3 features · L4 comparison · L5 pricing+toggle · L6 FAQ accordion · L7 footer/links
 ### Auth (S1–S3)
-- [~] Auth shell reskin: paper card (border-line, radius, logo above) — done; field labels not yet mono-uppercase
+- [~] Auth shell reskin: paper card + mono field labels done; remaining: dup-email/loading/redirect behaviour AC
 - [ ] S1 signup (validation, pw toggle, loading, dup-email, redirect)
 - [ ] S2 login (invalid creds, redirect, forgot link)
 - [ ] S3 forgot-password (no-leak message)
