@@ -51,7 +51,8 @@
 - [ ] D2 dynamic week period/subtitle · D5 recent activities list · D7 full states · goal-banner · This-Week table · key signals (need backend goal/recent data)
 ### Activities list + detail
 - [x] activity list reskin (paper card rows, Inter Tight names, load-more)
-- [ ] A1 header/map · A2 metrics · A3 chart · A4 AI analysis · A5 laps (detail screen)
+- [x] A1 header + A2 metric grid + A4 analysis card (ai-dot, paper) reskinned
+- [ ] A1 map · A3 HR/pace chart · A5 laps (need backend stream data) · A4 real LLM analysis
 ### Coach chat (C1–C6)
 - [x] C1 layout (header Coach·Online, coach/user bubbles beveled corner, pill input + round send) · [x] C5 thinking state
 - [ ] C2 suggestion chips · C3 grounded replies (real LLM) · C4 history pagination/date groups · C6 activity context

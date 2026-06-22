@@ -127,6 +127,28 @@ const API_FIXTURES: Record<string, unknown> = {
       { id: "a4", activity_type: "running", name: "Long run", start_time: "2026-06-17T08:00:00Z", distance_m: 28000, duration_s: 9300, avg_hr: 147, tss: 165 },
     ],
   },
+  "/activities/a1": {
+    id: "a1",
+    activity_type: "running",
+    name: "Threshold intervals",
+    start_time: "2026-06-21T07:00:00Z",
+    distance_m: 14200,
+    duration_s: 4500,
+    avg_hr: 158,
+    max_hr: 178,
+    elevation_gain_m: 142,
+    avg_power_w: null,
+    tss: 96,
+    streams: null,
+  },
+  "/activities/a1/analysis": {
+    activity_id: "a1",
+    model: "gpt-4o-mini",
+    prompt_version: "v1",
+    facts: { tss: 96, avg_hr: 158, time_in_z4_min: 22, pace_min_km: 4.12 },
+    narrative:
+      "This was a quality threshold session — 22 minutes in zone 4 with heart rate holding steady at 158 bpm tells me you held the effort honestly without drifting into anaerobic territory. That's exactly the stimulus we want in the build phase: enough time at threshold to lift your lactate clearance, but controlled enough to recover for the weekend long run. Slot an easy day tomorrow and let this one consolidate.",
+  },
 };
 
 async function setupAuth(page: Page) {
@@ -163,6 +185,7 @@ const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "settings", path: "/settings" },
   { name: "subscription", path: "/settings/subscription" },
   { name: "activities", path: "/activities" },
+  { name: "activity-detail", path: "/activities/a1" },
   { name: "privacy", path: "/settings/privacy" },
 ];
 

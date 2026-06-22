@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import {
@@ -105,11 +105,11 @@ export function ActivityDetail({ id }: { id: string }) {
 
       <section
         aria-label="What this run means"
-        className="rounded-md border border-border p-5"
+        className="rounded border border-line bg-card p-6"
       >
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-accent" aria-hidden />
-          <h2 className="font-display text-lg font-semibold tracking-tight">
+        <div className="flex items-center gap-2.5">
+          <span className="h-2 w-2 flex-none rounded-full bg-primary" aria-hidden />
+          <h2 className="font-display text-base font-semibold tracking-tight text-ink">
             What this run means
           </h2>
         </div>
@@ -151,7 +151,7 @@ export function ActivityDetail({ id }: { id: string }) {
 
         {analysis.kind === "ready" && (
           <div className="mt-3 space-y-3">
-            <p className="whitespace-pre-line text-sm leading-relaxed">
+            <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink-soft">
               {analysis.data.narrative}
             </p>
             <details className="text-xs text-muted-foreground">
