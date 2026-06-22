@@ -75,7 +75,8 @@
 - [ ] Pricing page (/pricing) full
 - [x] GV1.1–GV1.5 goal-variant dashboard lens (chip + tailored framing keyed off profile.primary_goal; full per-goal metric sets need backend weight/calorie fields — deferred)
 - [x] PW1.1–PW1.5 push to watch UI (Send-to-watch button → confirm → synced state on plan; backend GarminProvider.push_workouts deferred to Phase 5)
-- [ ] E1–E3 weekly email template reskin
+- [x] E1 weekly email template reskin (warm-stone, email-safe tables/inline, metric cells, View dashboard CTA, unsubscribe) — verified via pytest + rendered preview
+- [ ] E2 scheduled Monday send (needs Redis/ARQ running) · E3 multi-client rendering (Gmail/Outlook/Apple) — USER-VERIFY
 
 ## Phase 5 — real integrations
 - [ ] Garmin real import → real dashboard data (O2.6, DI1)
