@@ -23,6 +23,10 @@ dist/
 .vscode/
 *.swp
 
+# Local DB (SQLite dev)
+*.db
+*.sqlite3
+
 # Test / coverage
 .pytest_cache/
 .ruff_cache/
