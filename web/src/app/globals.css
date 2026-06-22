@@ -3,80 +3,60 @@
 @tailwind utilities;
 
 /*
-  Endurance Coach — "vibe-hybrid" design system.
-  Coach-first: calm dark canvas, energetic signal accents for coaching cues.
-  Colors expressed as HSL channels so Tailwind can apply opacity modifiers.
+  Endurance Coach — warm-stone design system (matches docs/design/prototype.html).
+  Light only. Data-first, sharp edges (3px radius), burnt-orange accent.
+  Colors stored as HSL channels so Tailwind can apply opacity modifiers.
 */
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 42 28% 88%; /* #E9E4D8 stone */
+    --foreground: 60 12% 20%; /* #38382C ink */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 43 37% 93%; /* #F3EFE5 paper */
+    --card-foreground: 60 12% 20%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 43 37% 93%;
+    --popover-foreground: 60 12% 20%;
 
-    /* Signal: energetic coaching accent (electric blue) */
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary action / brand: burnt orange */
+    --primary: 20 68% 54%; /* #D9703A */
+    --primary-foreground: 42 62% 96%; /* #FBF7EE warm white */
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 41 35% 89%; /* #EDE7DA paper-2 */
+    --secondary-foreground: 51 14% 29%; /* #54513F ink-soft */
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 41 35% 89%;
+    --muted-foreground: 47 10% 44%; /* #7C7765 slate */
 
-    /* Performance accent (vibrant lime-energy) */
-    --accent: 160 84% 39%;
-    --accent-foreground: 0 0% 100%;
+    /* Positive / recovery: olive */
+    --accent: 70 27% 36%; /* #6E7644 */
+    --accent-foreground: 42 62% 96%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    /* Error / negative: rust */
+    --destructive: 20 61% 48%; /* #C4612F */
+    --destructive-foreground: 42 62% 96%;
 
-    --success: 142 71% 45%;
-    --warning: 38 92% 50%;
+    --success: 70 27% 36%; /* olive */
+    --warning: 38 70% 45%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 42 22% 76%; /* #CFC7B4 line */
+    --input: 42 22% 76%;
+    --ring: 20 68% 54%;
 
-    --radius: 0.75rem;
-  }
+    /* Prototype-specific tokens (signature components) */
+    --paper-2: 41 35% 89%; /* #EDE7DA */
+    --ink-soft: 51 14% 29%; /* #54513F */
+    --ink-deep: 60 12% 15%; /* #2B2B22 goal banner */
+    --slate: 47 10% 44%; /* #7C7765 */
+    --slate-lt: 47 10% 56%; /* #9A9583 */
+    --line-soft: 42 26% 82%; /* #DCD5C4 */
+    --accent-dk: 20 65% 45%; /* #BC5A28 */
+    --olive: 70 27% 36%; /* #6E7644 */
+    --rust: 20 61% 48%; /* #C4612F */
+    --taupe: 41 20% 58%; /* #A99C7F */
 
-  .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 44% 10%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 44% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 160 84% 45%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 63% 44%;
-    --destructive-foreground: 210 40% 98%;
-
-    --success: 142 71% 45%;
-    --warning: 38 92% 50%;
-
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 217 91% 60%;
+    --radius: 3px;
   }
 }
 
@@ -87,8 +67,9 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
   }
-  /* Data / metrics rendered in monospace for legibility */
+  /* Data / metrics rendered in monospace, tabular for legibility */
   .font-data {
     @apply font-mono tabular-nums;
   }
