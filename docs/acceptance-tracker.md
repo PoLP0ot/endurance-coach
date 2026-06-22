@@ -74,7 +74,7 @@
 - [x] ON1.1–ON1.6 conversational onboarding (/coachonboard): welcome → goal chips → tailored follow-up → "Let's go" hand-off, persists primary_goal via PATCH /profile
 - [ ] Pricing page (/pricing) full
 - [ ] GV1.1–GV1.5 goal-variant dashboards (marathon/weight-loss/health)
-- [ ] PW1.1–PW1.5 push to watch
+- [x] PW1.1–PW1.5 push to watch UI (Send-to-watch button → confirm → synced state on plan; backend GarminProvider.push_workouts deferred to Phase 5)
 - [ ] E1–E3 weekly email template reskin
 
 ## Phase 5 — real integrations

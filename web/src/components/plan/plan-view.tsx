@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, Watch } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import {
@@ -26,6 +26,11 @@ export function PlanView() {
   const [goal, setGoal] = useState<string>(GOALS[0].value);
   const [weeks, setWeeks] = useState(12);
   const [generating, setGenerating] = useState(false);
+  // Push-to-watch (A14). Backend GarminProvider.push_workouts is deferred (Phase 5);
+  // this drives the UI flow only.
+  const [watch, setWatch] = useState<"idle" | "confirm" | "sending" | "synced">(
+    "idle",
+  );
 
   const load = useCallback(async () => {
     setPhase("loading");
@@ -132,6 +137,46 @@ export function PlanView() {
             </section>
           )}
           <PlanTimeline weeks={plan.structure.weeks} />
+
+          <section className="rounded border border-line bg-card p-5">
+            {watch === "synced" ? (
+              <p className="flex items-center gap-2 text-sm font-medium text-olive">
+                <Watch className="h-4 w-4" aria-hidden />
+                This week&apos;s workouts are on your Garmin watch.
+              </p>
+            ) : watch === "confirm" ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-ink-soft">
+                  Send this week&apos;s structured workouts to your watch?
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => setWatch("synced")}>
+                    Confirm
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setWatch("idle")}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Watch className="h-5 w-5 text-primary" aria-hidden />
+                  <div>
+                    <h3 className="font-display text-sm font-semibold text-ink">
+                      Push to watch
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Sync this week&apos;s sessions to your Garmin.
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" onClick={() => setWatch("confirm")}>
+                  Send to watch
+                </Button>
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>
