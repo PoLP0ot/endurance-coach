@@ -186,6 +186,7 @@ const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "subscription", path: "/settings/subscription" },
   { name: "activities", path: "/activities" },
   { name: "activity-detail", path: "/activities/a1" },
+  { name: "explore", path: "/explore" },
   { name: "privacy", path: "/settings/privacy" },
 ];
 

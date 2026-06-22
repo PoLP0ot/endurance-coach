@@ -70,7 +70,7 @@
 
 ## Phase 4 — new prototype screens
 - [x] /pricing standalone page (reuses marketing Pricing, FEATURED premium card)
-- [ ] Signals/Explore (question cards + coach interpretation)
+- [x] Signals/Explore (/explore): question cards + sparklines + coach interpretation (derived from /dashboard facts; client-templated text pending real LLM)
 - [ ] ON1.1–ON1.6 conversational onboarding coach
 - [ ] Pricing page (/pricing) full
 - [ ] GV1.1–GV1.5 goal-variant dashboards (marathon/weight-loss/health)
