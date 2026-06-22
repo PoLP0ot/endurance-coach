@@ -27,6 +27,12 @@ dist/
 *.db
 *.sqlite3
 
+# E2E / visual (Playwright)
+web/e2e/__shots__/
+web/e2e/.output/
+web/test-results/
+web/playwright-report/
+
 # Test / coverage
 .pytest_cache/
 .ruff_cache/
