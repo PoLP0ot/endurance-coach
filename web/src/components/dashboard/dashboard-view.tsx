@@ -6,6 +6,8 @@ import { Activity } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import { dashboardSchema, type Dashboard } from "@/schemas/dashboard";
+import { profileSchema } from "@/schemas/profile";
+import { GOALS } from "@/schemas/plan";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -17,7 +19,16 @@ import { TrainingLoadChart } from "./training-load-chart";
 type Phase =
   | { kind: "loading" }
   | { kind: "error" }
-  | { kind: "ready"; data: Dashboard };
+  | { kind: "ready"; data: Dashboard; goal: string | null };
+
+/** Goal-aware framing for the dashboard "lens" (A13). */
+const GOAL_LENS: Record<string, string> = {
+  marathon: "Every metric read against your race readiness.",
+  weight_loss: "Training framed around steady, sustainable fat loss.",
+  hyrox: "Balancing run volume with strength endurance.",
+  triathlon: "Your three sports as one combined load.",
+  health: "Consistency, recovery and long-term health first.",
+};
 
 /** Coach-first dashboard: narrative first, then metrics and the load chart. */
 export function DashboardView() {
@@ -28,7 +39,15 @@ export function DashboardView() {
     try {
       const token = await getAccessToken();
       const raw = await apiFetch<unknown>("/dashboard", { token });
-      setPhase({ kind: "ready", data: dashboardSchema.parse(raw) });
+      const data = dashboardSchema.parse(raw);
+      let goal: string | null = null;
+      try {
+        const profileRaw = await apiFetch<unknown>("/profile", { token });
+        goal = profileSchema.parse(profileRaw).primary_goal;
+      } catch {
+        // profile is optional context — the dashboard renders without it
+      }
+      setPhase({ kind: "ready", data, goal });
     } catch {
       setPhase({ kind: "error" });
     }
@@ -50,7 +69,11 @@ export function DashboardView() {
     );
   }
 
-  const { data } = phase;
+  const { data, goal } = phase;
+  const goalLabel = goal
+    ? GOALS.find((g) => g.value === goal)?.label
+    : undefined;
+  const lens = goal ? GOAL_LENS[goal] : undefined;
   if (data.totals.activity_count === 0) {
     return (
       <EmptyState
@@ -70,7 +93,17 @@ export function DashboardView() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-semibold tracking-tight">Progress</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Progress
+        </h1>
+        {goalLabel && (
+          <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-primary">
+            {goalLabel} lens
+          </span>
+        )}
+      </div>
+      {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
       <CoachNote headline={data.form.headline} detail={data.form.detail} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard

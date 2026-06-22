@@ -73,7 +73,7 @@
 - [x] Signals/Explore (/explore): question cards + sparklines + coach interpretation (derived from /dashboard facts; client-templated text pending real LLM)
 - [x] ON1.1–ON1.6 conversational onboarding (/coachonboard): welcome → goal chips → tailored follow-up → "Let's go" hand-off, persists primary_goal via PATCH /profile
 - [ ] Pricing page (/pricing) full
-- [ ] GV1.1–GV1.5 goal-variant dashboards (marathon/weight-loss/health)
+- [x] GV1.1–GV1.5 goal-variant dashboard lens (chip + tailored framing keyed off profile.primary_goal; full per-goal metric sets need backend weight/calorie fields — deferred)
 - [x] PW1.1–PW1.5 push to watch UI (Send-to-watch button → confirm → synced state on plan; backend GarminProvider.push_workouts deferred to Phase 5)
 - [ ] E1–E3 weekly email template reskin
 
