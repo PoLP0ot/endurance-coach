@@ -98,10 +98,18 @@ export function DashboardView() {
         />
       </div>
       <TrainingLoadChart data={data.load_series} />
-      <p className="text-sm text-muted-foreground">
-        {data.totals.activity_count} activities · {km} km in the last{" "}
-        {data.totals.window_days} days
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {data.totals.activity_count} activities · {km} km in the last{" "}
+          {data.totals.window_days} days
+        </p>
+        <Link
+          href="/activities"
+          className="text-sm text-primary underline-offset-4 hover:underline"
+        >
+          View history
+        </Link>
+      </div>
     </div>
   );
 }
