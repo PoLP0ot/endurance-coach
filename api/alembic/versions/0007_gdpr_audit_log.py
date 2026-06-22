@@ -8,7 +8,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
+from app.models.base import GUID
 
 revision: str = "0007_gdpr_audit_log"
 down_revision: Union[str, None] = "0006_user_prefs"
@@ -21,7 +21,7 @@ def upgrade() -> None:
         "gdpr_audit_log",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
         # Deliberately NOT a foreign key — must outlive the deleted user.
-        sa.Column("user_id", postgresql.UUID(as_uuid=False), nullable=False),
+        sa.Column("user_id", GUID(), nullable=False),
         sa.Column("action", sa.String(20), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),

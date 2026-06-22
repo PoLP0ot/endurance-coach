@@ -25,41 +25,32 @@ class Task(StrEnum):
 
 
 class LLMProvider:
-    """Thin wrapper over the Anthropic SDK with a model router."""
+    """Thin wrapper over AI SDKs with a model router."""
 
     def __init__(self, api_key: str | None = None) -> None:
-        self._api_key = api_key or settings.anthropic_api_key
+        self._openai_key = api_key or settings.openai_api_key
 
     def model_for(self, task: Task) -> str:
-        """Route tasks to the right model tier."""
         if task is Task.PLAN:
             return settings.llm_model_plan
         return settings.llm_model_chat
 
     def narrate(self, task: Task, facts: dict, instruction: str) -> str:
-        """Produce a narrative from already-computed facts.
+        from openai import OpenAI
 
-        `facts` is rendered verbatim so the model cannot drift on numbers.
-        The Anthropic client is imported lazily so the module loads without a
-        key configured (e.g. in unit tests).
-        """
-        from anthropic import Anthropic
-
-        client = Anthropic(api_key=self._api_key)
-        message = client.messages.create(
+        client = OpenAI(api_key=self._openai_key)
+        response = client.chat.completions.create(
             model=self.model_for(task),
             max_tokens=1024,
-            system=COACH_SYSTEM_PROMPT,
             messages=[
+                {"role": "system", "content": COACH_SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": (
                         f"{instruction}\n\n"
                         f"FACTS (authoritative, do not recompute):\n{facts}"
                     ),
-                }
+                },
             ],
         )
-        return "".join(
-            block.text for block in message.content if getattr(block, "type", "") == "text"
-        )
+        return response.choices[0].message.content or ""

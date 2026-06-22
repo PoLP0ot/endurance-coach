@@ -29,9 +29,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/postgres"
 
     # AI
-    anthropic_api_key: str = ""
-    llm_model_chat: str = "claude-sonnet-4-6"
-    llm_model_plan: str = "claude-opus-4-8"
+    openai_api_key: str = ""
+    llm_model_chat: str = "gpt-4o-mini"
+    llm_model_plan: str = "gpt-4o"
 
     # Queue / Email / Payments
     redis_url: str = "redis://localhost:6379"

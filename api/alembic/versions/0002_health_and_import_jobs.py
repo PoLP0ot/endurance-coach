@@ -8,7 +8,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
+from app.models.base import GUID
 
 revision: str = "0002_health_and_import_jobs"
 down_revision: Union[str, None] = "0001_initial"
@@ -19,8 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "daily_health",
-        sa.Column("id", postgresql.UUID(as_uuid=False), primary_key=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=False), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("id", GUID(), primary_key=True),
+        sa.Column("user_id", GUID(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("day", sa.Date(), nullable=False),
         sa.Column("resting_hr", sa.Integer(), nullable=True),
         sa.Column("hrv", sa.Float(), nullable=True),
@@ -38,8 +38,8 @@ def upgrade() -> None:
 
     op.create_table(
         "import_jobs",
-        sa.Column("id", postgresql.UUID(as_uuid=False), primary_key=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=False), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("id", GUID(), primary_key=True),
+        sa.Column("user_id", GUID(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("status", sa.String(20), nullable=False, server_default="queued"),
         sa.Column("progress_label", sa.String(60), nullable=True),
         sa.Column("activities_imported", sa.Integer(), nullable=False, server_default="0"),

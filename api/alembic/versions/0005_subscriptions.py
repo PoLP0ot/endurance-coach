@@ -8,7 +8,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
+from app.models.base import GUID
 
 revision: str = "0005_subscriptions"
 down_revision: Union[str, None] = "0004_training_plans"
@@ -19,8 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "subscriptions",
-        sa.Column("id", postgresql.UUID(as_uuid=False), primary_key=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=False), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("id", GUID(), primary_key=True),
+        sa.Column("user_id", GUID(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("paddle_customer_id", sa.String(80), nullable=True),
         sa.Column("paddle_subscription_id", sa.String(80), nullable=True),
         sa.Column("status", sa.String(20), nullable=False, server_default="free"),
