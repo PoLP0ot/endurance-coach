@@ -21,6 +21,9 @@ class User(Base, TimestampMixin):
     subscription_status: Mapped[str] = mapped_column(
         String(20), default="free", nullable=False
     )
+    # Preferred units and weekly coaching email opt-in (US6, US11a).
+    units: Mapped[str] = mapped_column(String(10), default="metric", nullable=False)
+    weekly_email_opt_in: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     garmin_connection = relationship(
         "GarminConnection", back_populates="user", uselist=False, cascade="all, delete-orphan"

@@ -15,6 +15,7 @@ from app.routers import (
     activities,
     chat,
     dashboard,
+    email,
     garmin,
     health,
     plans,
@@ -66,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(plans.router)
     app.include_router(subscriptions.router)
+    app.include_router(email.router)
     return app
 
 
