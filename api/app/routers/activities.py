@@ -8,9 +8,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user
+from app.core.deps import (
+    CurrentUser,
+    get_current_user,
+    get_llm_provider,
+    require_premium,
+)
 from app.models.activity import Activity, ActivityMetric
 from app.models.user import User
+from app.services.activity_analysis import get_or_create_analysis
 from app.services.activity_history import (
     DEFAULT_LIMIT,
     MAX_LIMIT,
@@ -71,4 +77,25 @@ async def get_activity(
         "avg_power_w": activity.avg_power_w,
         "tss": activity.tss,
         "streams": streams.data if streams is not None else None,
+    }
+
+
+@router.get("/{activity_id}/analysis")
+async def get_activity_analysis(
+    activity_id: str,
+    user: User = Depends(require_premium),
+    db: Session = Depends(get_db),
+    llm=Depends(get_llm_provider),
+) -> dict:
+    """AI coach analysis of one activity (premium). Cached after first ask."""
+    activity = db.get(Activity, activity_id)
+    if activity is None or activity.user_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "activity_not_found")
+    analysis = get_or_create_analysis(db, activity, llm)
+    return {
+        "activity_id": activity.id,
+        "model": analysis.model,
+        "facts": analysis.facts,
+        "narrative": analysis.narrative,
+        "prompt_version": analysis.prompt_version,
     }

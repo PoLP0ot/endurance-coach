@@ -5,8 +5,12 @@ from dataclasses import dataclass
 
 from fastapi import Depends, Header, HTTPException, status
 from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.db import get_db
+from app.models.user import User
+from app.services.subscriptions import is_premium
 
 
 @dataclass(frozen=True)
@@ -68,3 +72,32 @@ async def get_current_user(
 
 # Type alias for cleaner route signatures
 CurrentUserDep = Depends(get_current_user)
+
+
+def get_llm_provider():
+    """LLMProvider dependency (overridden in tests to avoid network)."""
+    from app.services.llm import LLMProvider
+
+    return LLMProvider()
+
+
+async def require_premium(
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    """Gate premium-only features. Returns the DB user, 402 if not subscribed.
+
+    Auto-provisions the profile row on first access so newly signed-up users
+    resolve cleanly (subscription defaults to free → blocked until upgrade).
+    """
+    db_user = db.get(User, user.id)
+    if db_user is None:
+        db_user = User(id=user.id, email=user.email)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    if not is_premium(db_user):
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED, "premium_required"
+        )
+    return db_user
