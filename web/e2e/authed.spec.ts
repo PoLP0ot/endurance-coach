@@ -54,6 +54,30 @@ const API_FIXTURES: Record<string, unknown> = {
       avg_hr: 154,
     },
   },
+  "/chat/messages": {
+    messages: [
+      {
+        id: 1,
+        role: "assistant",
+        content:
+          "Morning Marc. Your Tuesday tempo landed right on target — 4×2km at threshold with HR holding steady. That's the session we wanted 12 weeks out from Paris.",
+        created_at: "2026-06-21T08:00:00Z",
+      },
+      {
+        id: 2,
+        role: "user",
+        content: "Should I be worried my form is at -9?",
+        created_at: "2026-06-21T08:01:00Z",
+      },
+      {
+        id: 3,
+        role: "assistant",
+        content:
+          "Not at all. A TSB of -9 means you're carrying productive fatigue — exactly where a build block should sit. We'll let it rebound during next week's down week before the long-run progression resumes.",
+        created_at: "2026-06-21T08:01:30Z",
+      },
+    ],
+  },
 };
 
 async function setupAuth(page: Page) {
@@ -85,6 +109,7 @@ async function setupAuth(page: Page) {
 
 const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "dashboard", path: "/dashboard" },
+  { name: "coach", path: "/coach" },
 ];
 
 for (const route of AUTHED_ROUTES) {

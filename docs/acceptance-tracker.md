@@ -52,7 +52,8 @@
 ### Activity detail (A1–A5)
 - [ ] A1 header/map · A2 metrics · A3 chart · A4 AI analysis · A5 laps
 ### Coach chat (C1–C6)
-- [ ] C1 layout · C2 suggestions · C3 replies · C4 history · C5 states · C6 context
+- [x] C1 layout (header Coach·Online, coach/user bubbles beveled corner, pill input + round send) · [x] C5 thinking state
+- [ ] C2 suggestion chips · C3 grounded replies (real LLM) · C4 history pagination/date groups · C6 activity context
 ### Training plan (P1–P4)
 - [ ] P1 generate · P2 timeline · P3 week detail · P4 adapt
 ### Settings (ST1–ST6)

@@ -103,8 +103,21 @@ export function ChatView() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+    <div className="flex h-[calc(100vh-9rem)] flex-col">
+      <div className="mb-4 border-b border-line pb-4">
+        <h1 className="flex items-center gap-3 font-display text-xl font-semibold tracking-tight text-ink">
+          Coach
+          <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-olive">
+            <span className="h-1.5 w-1.5 rounded-full bg-olive" aria-hidden />
+            Online
+          </span>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Ask me anything about your training. I know your Garmin data.
+        </p>
+      </div>
+
+      <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {messages.length === 0 && (
           <p className="text-sm text-muted-foreground">
             Ask your coach anything — training, recovery, or your next session.
@@ -120,10 +133,10 @@ export function ChatView() {
           >
             <p
               className={cn(
-                "max-w-[80%] whitespace-pre-line rounded-md px-3 py-2 text-sm",
+                "max-w-[84%] whitespace-pre-line rounded-[12px] px-4 py-3 text-[14.5px] leading-relaxed",
                 m.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-secondary/40",
+                  ? "rounded-tr-[3px] bg-ink text-paper"
+                  : "rounded-tl-[3px] border border-line bg-card text-ink-soft",
               )}
             >
               {m.content}
@@ -132,7 +145,7 @@ export function ChatView() {
         ))}
         {sending && (
           <div className="flex justify-start">
-            <p className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground">
+            <p className="flex items-center gap-2 rounded-[12px] rounded-tl-[3px] border border-line bg-card px-4 py-3 text-[14.5px] text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               Coach is thinking…
             </p>
@@ -145,10 +158,17 @@ export function ChatView() {
         <Input
           aria-label="Message your coach"
           placeholder="Message your coach…"
+          className="rounded-full"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <Button type="submit" size="icon" aria-label="Send" disabled={sending}>
+        <Button
+          type="submit"
+          size="icon"
+          aria-label="Send"
+          className="shrink-0 rounded-full"
+          disabled={sending}
+        >
           <Send className="h-4 w-4" aria-hidden />
         </Button>
       </form>
