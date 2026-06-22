@@ -24,16 +24,17 @@
 - [ ] 1.2 primitives: Dialog/Modal (radix) + Toast
 
 ## Phase 2 — shell & navigation
-- [ ] MN1.1 bottom nav 4 tabs <768px (Progress/Coach/Plan/More)
-- [ ] MN1.2 bottom nav hidden on landing/signup/onboarding
-- [ ] MN1.3 active tab in accent color
-- [ ] MN1.4 all tabs navigate correctly
-- [ ] More-sheet (Activities, Signals, Settings, Pricing, Log Out)
-- [ ] DL1.1 sidebar ≥1024px on app screens (240px, separators, athlete card)
-- [ ] DL1.2 sidebar hidden on landing/signup/onboarding
-- [ ] DL1.3 bottom nav hidden on desktop
-- [ ] DL1.4 sidebar links functional
-- [ ] DL1.5 content takes remaining width
+- [x] MN1.1 bottom nav 4 tabs <768px (62px, font-display) — currently Progress/Coach/Plan/Settings
+- [x] MN1.2 bottom nav hidden on landing/signup/onboarding (separate route groups)
+- [x] MN1.3 active tab in accent color
+- [x] MN1.4 all tabs navigate correctly
+- [ ] More-sheet (swap 4th tab to More → Activities, Signals, Settings, Pricing, Log Out) — pending nav-items expansion
+- [x] DL1.1 sidebar ≥1024px (240px, glyph, border-left orange active, Inter Tight links)
+- [x] DL1.2 sidebar hidden on landing/signup/onboarding
+- [x] DL1.3 bottom nav hidden on desktop
+- [x] DL1.4 sidebar links functional
+- [x] DL1.5 content takes remaining width
+- [ ] sidebar athlete card at bottom (deferred — needs real user data, avoid demo)
 
 ## Phase 3 — reskin existing screens (pixel-match)
 ### Landing (L1–L7)
