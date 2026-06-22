@@ -80,8 +80,8 @@ export function PlanView() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-md border border-border p-5">
-        <h2 className="font-display text-lg font-semibold tracking-tight">
+      <div className="rounded border border-line bg-card p-5">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-ink">
           {plan ? "Regenerate your plan" : "Build your plan"}
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -91,7 +91,7 @@ export function PlanView() {
               id="goal"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="w-full rounded border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none"
             >
               {GOALS.map((g) => (
                 <option key={g.value} value={g.value}>
@@ -109,7 +109,7 @@ export function PlanView() {
               max={24}
               value={weeks}
               onChange={(e) => setWeeks(Number(e.target.value))}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="w-full rounded border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none"
             />
           </div>
         </div>
@@ -124,9 +124,9 @@ export function PlanView() {
           {plan.narrative && (
             <section
               aria-label="Plan rationale"
-              className="rounded-md border-l-2 border-primary bg-secondary/40 p-5"
+              className="rounded border border-line border-l-2 border-l-primary bg-card p-5"
             >
-              <p className="whitespace-pre-line text-sm leading-relaxed">
+              <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink-soft">
                 {plan.narrative}
               </p>
             </section>

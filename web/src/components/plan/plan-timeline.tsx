@@ -12,13 +12,13 @@ const PHASE_LABEL: Record<PlanWeek["phase"], string> = {
 /** Week-by-week periodized plan timeline (US5). */
 export function PlanTimeline({ weeks }: { weeks: PlanWeek[] }) {
   return (
-    <ol className="divide-y divide-border rounded-md border border-border">
+    <ol className="divide-y divide-line rounded border border-line bg-card">
       {weeks.map((w) => (
         <li key={w.week} className="flex items-center justify-between gap-4 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium">
+            <p className="font-display text-sm font-semibold text-ink">
               Week {w.week}
-              <span className="ml-2 text-xs text-muted-foreground">
+              <span className="ml-2 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                 {formatDate(w.start_date)}
               </span>
             </p>
@@ -26,23 +26,25 @@ export function PlanTimeline({ weeks }: { weeks: PlanWeek[] }) {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {w.is_recovery && (
-              <span className="rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+              <span className="rounded-full bg-olive/15 px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-olive">
                 Recovery
               </span>
             )}
             <span
               className={cn(
-                "rounded-sm px-1.5 py-0.5 text-[10px] uppercase",
+                "rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em]",
                 w.phase === "peak"
-                  ? "bg-accent/20 text-accent"
+                  ? "bg-primary/10 text-primary"
                   : "bg-secondary text-muted-foreground",
               )}
             >
               {PHASE_LABEL[w.phase]}
             </span>
-            <span className="font-data text-sm tabular-nums">
+            <span className="font-display text-sm font-semibold tabular-nums text-ink">
               {w.target_tss.toFixed(0)}
-              <span className="ml-1 text-xs text-muted-foreground">TSS</span>
+              <span className="ml-1 font-mono text-[10px] text-muted-foreground">
+                TSS
+              </span>
             </span>
           </div>
         </li>

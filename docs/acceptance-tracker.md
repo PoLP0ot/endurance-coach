@@ -55,7 +55,8 @@
 - [x] C1 layout (header Coach·Online, coach/user bubbles beveled corner, pill input + round send) · [x] C5 thinking state
 - [ ] C2 suggestion chips · C3 grounded replies (real LLM) · C4 history pagination/date groups · C6 activity context
 ### Training plan (P1–P4)
-- [ ] P1 generate · P2 timeline · P3 week detail · P4 adapt
+- [x] P1 generate form (paper card, field selects) · [x] P2 timeline (phase pills, TSS) · [x] narrative card
+- [ ] P3 per-week day detail (workouts + statuses) · P4 adapt confirm · horizontal week rail (prototype)
 ### Settings (ST1–ST6)
 - [ ] ST1 profile · ST2 goal race · ST3 garmin · ST4 subscription · ST5 data/GDPR · ST6 logout
 ### Subscription/Pricing (PR1–PR2)

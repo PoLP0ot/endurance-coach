@@ -78,6 +78,30 @@ const API_FIXTURES: Record<string, unknown> = {
       },
     ],
   },
+  "/plans/current": {
+    plan: {
+      id: "plan-1",
+      goal: "marathon",
+      weeks: 12,
+      start_date: "2026-06-01",
+      status: "active",
+      structure: {
+        goal: "marathon",
+        weeks: [
+          { week: 1, start_date: "2026-06-01", phase: "base", is_recovery: false, target_tss: 280, focus: "Aerobic base — easy mileage + strides" },
+          { week: 2, start_date: "2026-06-08", phase: "base", is_recovery: false, target_tss: 310, focus: "Volume build + first tempo" },
+          { week: 3, start_date: "2026-06-15", phase: "base", is_recovery: true, target_tss: 210, focus: "Down week — absorb the load" },
+          { week: 4, start_date: "2026-06-22", phase: "build", is_recovery: false, target_tss: 340, focus: "Threshold intervals + long run" },
+          { week: 5, start_date: "2026-06-29", phase: "build", is_recovery: false, target_tss: 365, focus: "Marathon-pace progression" },
+          { week: 6, start_date: "2026-07-06", phase: "peak", is_recovery: false, target_tss: 390, focus: "Peak long run + race-pace blocks" },
+          { week: 7, start_date: "2026-07-13", phase: "taper", is_recovery: false, target_tss: 250, focus: "Taper — sharpen and freshen" },
+        ],
+      },
+      narrative:
+        "Twelve weeks to Paris. We start by widening your aerobic base, then layer threshold and marathon-pace work through the build, peak around week 6, and taper into race day. Recovery weeks are deliberate — that's where the gains consolidate.",
+      model: "gpt-4o",
+    },
+  },
 };
 
 async function setupAuth(page: Page) {
@@ -110,6 +134,7 @@ async function setupAuth(page: Page) {
 const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "dashboard", path: "/dashboard" },
   { name: "coach", path: "/coach" },
+  { name: "plan", path: "/plan" },
 ];
 
 for (const route of AUTHED_ROUTES) {
