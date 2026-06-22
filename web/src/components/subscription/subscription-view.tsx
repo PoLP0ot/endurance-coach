@@ -96,7 +96,7 @@ export function SubscriptionView() {
 
   if (status.is_premium) {
     return (
-      <div className="rounded-md border border-border p-6">
+      <div className="rounded border border-line bg-card p-6">
         <p className="font-display text-lg font-semibold">You&apos;re on Premium</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {status.current_period_end
@@ -108,7 +108,7 @@ export function SubscriptionView() {
   }
 
   return (
-    <div className="rounded-md border border-border p-6">
+    <div className="rounded border border-line bg-card p-6">
       <p className="font-display text-lg font-semibold">Upgrade to Premium</p>
       <p className="mt-1 text-sm text-muted-foreground">$8/month · cancel anytime</p>
       <ul className="mt-4 space-y-2">

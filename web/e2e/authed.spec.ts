@@ -102,6 +102,21 @@ const API_FIXTURES: Record<string, unknown> = {
       model: "gpt-4o",
     },
   },
+  "/profile": {
+    id: "00000000-0000-0000-0000-000000000001",
+    email: "marc@example.com",
+    display_name: "Marc",
+    primary_goal: "marathon",
+    units: "metric",
+    weekly_email_opt_in: true,
+    onboarding_complete: true,
+    subscription_status: "free",
+  },
+  "/subscription/status": {
+    status: "free",
+    is_premium: false,
+    current_period_end: null,
+  },
 };
 
 async function setupAuth(page: Page) {
@@ -135,6 +150,8 @@ const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "dashboard", path: "/dashboard" },
   { name: "coach", path: "/coach" },
   { name: "plan", path: "/plan" },
+  { name: "settings", path: "/settings" },
+  { name: "subscription", path: "/settings/subscription" },
 ];
 
 for (const route of AUTHED_ROUTES) {

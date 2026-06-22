@@ -73,7 +73,7 @@ export function SettingsView() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4 rounded-md border border-border p-5">
+      <div className="space-y-4 rounded border border-line bg-card p-6">
         <div className="space-y-1.5">
           <Label htmlFor="display_name">Display name</Label>
           <Input
@@ -88,7 +88,7 @@ export function SettingsView() {
             id="goal"
             value={profile.primary_goal ?? ""}
             onChange={(e) => patch({ primary_goal: e.target.value || null })}
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="w-full rounded border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none"
           >
             <option value="">Not set</option>
             {GOALS.map((g) => (
@@ -106,7 +106,7 @@ export function SettingsView() {
             onChange={(e) =>
               patch({ units: e.target.value as Profile["units"] })
             }
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="w-full rounded border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none"
           >
             <option value="metric">Metric (km)</option>
             <option value="imperial">Imperial (mi)</option>
@@ -125,7 +125,7 @@ export function SettingsView() {
         </Button>
       </div>
 
-      <nav className="divide-y divide-border rounded-md border border-border">
+      <nav className="divide-y divide-line rounded border border-line bg-card">
         <Link
           href="/settings/subscription"
           className="flex items-center justify-between px-4 py-3 text-sm hover:bg-secondary/50"

@@ -58,9 +58,11 @@
 - [x] P1 generate form (paper card, field selects) · [x] P2 timeline (phase pills, TSS) · [x] narrative card
 - [ ] P3 per-week day detail (workouts + statuses) · P4 adapt confirm · horizontal week rail (prototype)
 ### Settings (ST1–ST6)
-- [ ] ST1 profile · ST2 goal race · ST3 garmin · ST4 subscription · ST5 data/GDPR · ST6 logout
+- [x] ST1 profile (paper card, mono labels, field selects, orange switch) · [x] nav to subscription/privacy
+- [ ] ST2 goal race fields · ST3 garmin status/sync · ST5 data/GDPR detail · ST6 logout (in shell)
 ### Subscription/Pricing (PR1–PR2)
-- [ ] PR1 plans+toggle · PR2 checkout+success/cancel/error
+- [x] subscription view reskin (paper card, feature list, upgrade CTA)
+- [ ] PR1 standalone /pricing page + monthly/annual toggle · PR2 real checkout success/cancel/error
 
 ## Phase 4 — new prototype screens
 - [ ] Signals/Explore (question cards + coach interpretation)
