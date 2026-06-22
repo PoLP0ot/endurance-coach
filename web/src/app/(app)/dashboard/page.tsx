@@ -1,3 +1,5 @@
+import { DashboardView } from "@/components/dashboard/dashboard-view";
+
 export default function DashboardPage() {
-  return <h1 className="font-display text-2xl font-semibold">Progress</h1>;
+  return <DashboardView />;
 }

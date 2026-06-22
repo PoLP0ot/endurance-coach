@@ -88,6 +88,45 @@ def recovery_score(tsb: float, resting_hr_delta: float = 0.0, sleep_score: float
     return int(max(0.0, min(100.0, round(base))))
 
 
+def activity_tss(
+    duration_s: int | None, avg_hr: int | None, threshold_hr: float = 170.0
+) -> float:
+    """Best-effort TSS for a single activity from HR, 0.0 when data is missing.
+
+    Power-based TSS is preferred upstream; this HR fallback keeps the daily load
+    series populated for runners without a power meter. Deterministic.
+    """
+    if duration_s is None or avg_hr is None or duration_s <= 0:
+        return 0.0
+    return hr_training_stress_score(float(duration_s), float(avg_hr), threshold_hr)
+
+
+# Training Stress Balance bands → coach-facing form assessment.
+def form_assessment(tsb: float) -> dict[str, str]:
+    """Map TSB (form) to a band and a human-facing coaching headline.
+
+    Bands follow the standard CTL/ATL/TSB model: positive form means fresh,
+    the -10..-30 window is the productive training zone, and deeply negative
+    form signals overreaching. Returns ``{"band", "headline", "detail"}``.
+    """
+    if tsb >= 15.0:
+        band, headline = "peaked", "You're peaked and race-ready."
+        detail = "Form is high — a great window to perform. Avoid adding big load."
+    elif tsb >= 5.0:
+        band, headline = "fresh", "You're fresh."
+        detail = "Fatigue has cleared. Good day for quality or a hard session."
+    elif tsb >= -10.0:
+        band, headline = "neutral", "You're balanced."
+        detail = "Load and recovery are roughly even. Keep building steadily."
+    elif tsb >= -30.0:
+        band, headline = "productive", "You're in the productive training zone."
+        detail = "Fatigue is elevated but this is where fitness is built. Recover well."
+    else:
+        band, headline = "overreached", "You're carrying heavy fatigue."
+        detail = "Form is deeply negative. Prioritise recovery before more hard work."
+    return {"band": band, "headline": headline, "detail": detail}
+
+
 def intensity_distribution(
     hr_samples: list[int], zone_bounds: list[int]
 ) -> dict[str, float]:
