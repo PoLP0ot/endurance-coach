@@ -117,6 +117,16 @@ const API_FIXTURES: Record<string, unknown> = {
     is_premium: false,
     current_period_end: null,
   },
+  "/activities": {
+    windowed: false,
+    next_cursor: null,
+    items: [
+      { id: "a1", activity_type: "running", name: "Threshold intervals", start_time: "2026-06-21T07:00:00Z", distance_m: 14200, duration_s: 4500, avg_hr: 158, tss: 96 },
+      { id: "a2", activity_type: "running", name: "Easy recovery run", start_time: "2026-06-20T17:30:00Z", distance_m: 8100, duration_s: 2760, avg_hr: 132, tss: 41 },
+      { id: "a3", activity_type: "cycling", name: "Endurance ride", start_time: "2026-06-19T09:00:00Z", distance_m: 52000, duration_s: 7200, avg_hr: 141, tss: 118 },
+      { id: "a4", activity_type: "running", name: "Long run", start_time: "2026-06-17T08:00:00Z", distance_m: 28000, duration_s: 9300, avg_hr: 147, tss: 165 },
+    ],
+  },
 };
 
 async function setupAuth(page: Page) {
@@ -152,6 +162,8 @@ const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "plan", path: "/plan" },
   { name: "settings", path: "/settings" },
   { name: "subscription", path: "/settings/subscription" },
+  { name: "activities", path: "/activities" },
+  { name: "privacy", path: "/settings/privacy" },
 ];
 
 for (const route of AUTHED_ROUTES) {

@@ -79,7 +79,7 @@ export function ActivityList() {
 
   return (
     <div className="space-y-4">
-      <ul className="divide-y divide-border rounded-md border border-border">
+      <ul className="divide-y divide-line rounded border border-line bg-card">
         {items.map((a) => (
           <li key={a.id}>
             <Link
@@ -87,7 +87,7 @@ export function ActivityList() {
               className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-secondary/50"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
+                <p className="truncate font-display text-sm font-semibold text-ink">
                   {a.name ?? a.activity_type}
                 </p>
                 <p className="text-xs text-muted-foreground">

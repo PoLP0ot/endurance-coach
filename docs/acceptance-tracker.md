@@ -49,8 +49,9 @@
 ### Dashboard (D1–D7)
 - [x] D1 nav/topbar (shell) · [x] D3 metric cards (mono label + 40px tabular) · [x] D4 load chart · [x] D6 coach note (Coach's Assessment card + THIS WEEK badge)
 - [ ] D2 dynamic week period/subtitle · D5 recent activities list · D7 full states · goal-banner · This-Week table · key signals (need backend goal/recent data)
-### Activity detail (A1–A5)
-- [ ] A1 header/map · A2 metrics · A3 chart · A4 AI analysis · A5 laps
+### Activities list + detail
+- [x] activity list reskin (paper card rows, Inter Tight names, load-more)
+- [ ] A1 header/map · A2 metrics · A3 chart · A4 AI analysis · A5 laps (detail screen)
 ### Coach chat (C1–C6)
 - [x] C1 layout (header Coach·Online, coach/user bubbles beveled corner, pill input + round send) · [x] C5 thinking state
 - [ ] C2 suggestion chips · C3 grounded replies (real LLM) · C4 history pagination/date groups · C6 activity context
@@ -59,7 +60,8 @@
 - [ ] P3 per-week day detail (workouts + statuses) · P4 adapt confirm · horizontal week rail (prototype)
 ### Settings (ST1–ST6)
 - [x] ST1 profile (paper card, mono labels, field selects, orange switch) · [x] nav to subscription/privacy
-- [ ] ST2 goal race fields · ST3 garmin status/sync · ST5 data/GDPR detail · ST6 logout (in shell)
+- [x] ST5 privacy view reskin (export card + destructive delete card with confirm)
+- [ ] ST2 goal race fields · ST3 garmin status/sync · ST6 logout (in shell)
 ### Subscription/Pricing (PR1–PR2)
 - [x] subscription view reskin (paper card, feature list, upgrade CTA)
 - [ ] PR1 standalone /pricing page + monthly/annual toggle · PR2 real checkout success/cancel/error

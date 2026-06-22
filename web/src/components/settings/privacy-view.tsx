@@ -53,8 +53,8 @@ export function PrivacyView() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-md border border-border p-5">
-        <h2 className="font-display text-lg font-semibold">Export your data</h2>
+      <section className="rounded border border-line bg-card p-6">
+        <h2 className="font-display text-lg font-semibold text-ink">Export your data</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Download everything we hold about you as a JSON file (activities, health,
           chat, plans).
@@ -64,8 +64,8 @@ export function PrivacyView() {
         </Button>
       </section>
 
-      <section className="rounded-md border border-destructive/40 p-5">
-        <h2 className="font-display text-lg font-semibold">Delete your account</h2>
+      <section className="rounded border border-destructive/40 bg-card p-6">
+        <h2 className="font-display text-lg font-semibold text-ink">Delete your account</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Permanently erase your account and all associated data. This can&apos;t be
           undone.
