@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from sqlalchemy import String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin
+from app.models.base import GUID, Base, TimestampMixin
 
 
 class User(Base, TimestampMixin):
@@ -13,7 +12,7 @@ class User(Base, TimestampMixin):
 
     # Mirrors auth.users.id (Supabase). No FK across schemas in app code; the
     # SQL migration wires the auth.users foreign key.
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True)
     email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True)
     display_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     # Modular goal: marathon | weight_loss | hyrox | triathlon | health

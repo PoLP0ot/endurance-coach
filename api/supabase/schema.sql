@@ -87,6 +87,43 @@ create table if not exists public.ai_analyses (
 create index if not exists ix_ai_analyses_activity on public.ai_analyses (activity_id);
 
 -- ---------------------------------------------------------------------------
+-- daily_health — one row per user per day (sleep, HRV, resting HR…)
+-- ---------------------------------------------------------------------------
+create table if not exists public.daily_health (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references public.users (id) on delete cascade,
+    day date not null,
+    resting_hr integer,
+    hrv double precision,
+    sleep_score integer,
+    steps integer,
+    body_battery integer,
+    stress_avg integer,
+    weight_kg double precision,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    unique (user_id, day)
+);
+create index if not exists ix_daily_health_user on public.daily_health (user_id);
+create index if not exists ix_daily_health_day on public.daily_health (day);
+
+-- ---------------------------------------------------------------------------
+-- import_jobs — Garmin import progress (backs the polling endpoint)
+-- ---------------------------------------------------------------------------
+create table if not exists public.import_jobs (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references public.users (id) on delete cascade,
+    status text not null default 'queued',
+    progress_label text,
+    activities_imported integer not null default 0,
+    health_days_imported integer not null default 0,
+    error text,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+create index if not exists ix_import_jobs_user on public.import_jobs (user_id);
+
+-- ---------------------------------------------------------------------------
 -- Row Level Security — owner-only access
 -- ---------------------------------------------------------------------------
 alter table public.users enable row level security;
@@ -94,6 +131,8 @@ alter table public.garmin_connections enable row level security;
 alter table public.activities enable row level security;
 alter table public.activity_metrics enable row level security;
 alter table public.ai_analyses enable row level security;
+alter table public.daily_health enable row level security;
+alter table public.import_jobs enable row level security;
 
 create policy "own profile" on public.users
     for all using (auth.uid() = id) with check (auth.uid() = id);
@@ -119,3 +158,9 @@ create policy "own analyses" on public.ai_analyses
             where a.id = ai_analyses.activity_id and a.user_id = auth.uid()
         )
     );
+
+create policy "own health" on public.daily_health
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own import jobs" on public.import_jobs
+    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

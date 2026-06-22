@@ -4,10 +4,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin, gen_uuid
+from app.models.base import GUID, Base, JSONType, TimestampMixin, gen_uuid
 
 
 class Activity(Base, TimestampMixin):
@@ -16,11 +15,9 @@ class Activity(Base, TimestampMixin):
         UniqueConstraint("user_id", "garmin_activity_id", name="uq_user_garmin_activity"),
     )
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=gen_uuid
-    )
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=gen_uuid)
     user_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False),
+        GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -56,18 +53,16 @@ class ActivityMetric(Base, TimestampMixin):
 
     __tablename__ = "activity_metrics"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=gen_uuid
-    )
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=gen_uuid)
     activity_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False),
+        GUID(),
         ForeignKey("activities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     # one of: stream | laps | zones
     kind: Mapped[str] = mapped_column(String(20), nullable=False)
-    # JSONB payload: time series samples, lap splits, or zone distribution
-    data: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    # JSON payload: time series samples, lap splits, or zone distribution
+    data: Mapped[dict] = mapped_column(JSONType, nullable=False)
 
     activity = relationship("Activity", back_populates="metrics")

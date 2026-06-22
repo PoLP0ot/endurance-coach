@@ -4,20 +4,17 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin, gen_uuid
+from app.models.base import GUID, Base, TimestampMixin, gen_uuid
 
 
 class GarminConnection(Base, TimestampMixin):
     __tablename__ = "garmin_connections"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=gen_uuid
-    )
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=gen_uuid)
     user_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False),
+        GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
