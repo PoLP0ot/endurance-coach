@@ -65,9 +65,11 @@
 - [ ] ST2 goal race fields · ST3 garmin status/sync · ST6 logout (in shell)
 ### Subscription/Pricing (PR1–PR2)
 - [x] subscription view reskin (paper card, feature list, upgrade CTA)
-- [ ] PR1 standalone /pricing page + monthly/annual toggle · PR2 real checkout success/cancel/error
+- [x] PR1 standalone /pricing page (Free/Premium cards, FEATURED tag, monthly/annual toggle + Save 18%)
+- [ ] PR2 real checkout success/cancel/error (Phase 5 Paddle)
 
 ## Phase 4 — new prototype screens
+- [x] /pricing standalone page (reuses marketing Pricing, FEATURED premium card)
 - [ ] Signals/Explore (question cards + coach interpretation)
 - [ ] ON1.1–ON1.6 conversational onboarding coach
 - [ ] Pricing page (/pricing) full

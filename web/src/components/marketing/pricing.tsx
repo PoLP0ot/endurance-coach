@@ -36,7 +36,7 @@ export function Pricing() {
       <div
         role="group"
         aria-label="Billing period"
-        className="mx-auto mt-8 flex w-fit items-center gap-1 rounded-md border border-border p-1"
+        className="mx-auto mt-8 flex w-fit items-center gap-1 rounded border border-line p-1"
       >
         <Button
           variant={billing === "monthly" ? "secondary" : "ghost"}
@@ -104,11 +104,16 @@ function PlanCard({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-md border border-border bg-card p-6",
-        highlighted && "border-accent",
+        "relative flex flex-col rounded border border-line bg-card p-6",
+        highlighted && "border-[1.5px] border-primary",
       )}
     >
-      <h3 className="font-display text-lg font-semibold">{name}</h3>
+      {highlighted && (
+        <span className="absolute -top-2.5 left-7 rounded-full bg-primary px-3 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-primary-foreground">
+          Featured
+        </span>
+      )}
+      <h3 className="font-display text-lg font-semibold text-ink">{name}</h3>
       <p className="mt-2">
         <span className="font-display text-4xl font-bold tabular-nums">
           {price}
