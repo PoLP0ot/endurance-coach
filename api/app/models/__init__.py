@@ -6,6 +6,7 @@ from app.models.chat import ChatMessage
 from app.models.garmin import GarminConnection
 from app.models.health import DailyHealth
 from app.models.import_job import ImportJob
+from app.models.plan import TrainingPlan
 from app.models.user import User
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "ChatMessage",
     "DailyHealth",
     "ImportJob",
+    "TrainingPlan",
 ]
