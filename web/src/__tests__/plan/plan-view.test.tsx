@@ -69,4 +69,36 @@ describe("PlanView (US5)", () => {
     render(<PlanView />);
     expect(await screen.findByText(/training plans are premium/i)).toBeInTheDocument();
   });
+
+  it("pushes this week's workout to the watch", async () => {
+    apiFetch.mockResolvedValueOnce({ plan }); // load current plan
+    render(<PlanView />);
+    expect(await screen.findByText("Week 1")).toBeInTheDocument();
+
+    apiFetch.mockResolvedValueOnce({ pushed: 1, week: 1 }); // POST /plans/push
+    fireEvent.click(screen.getByRole("button", { name: /send to watch/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /confirm/i }));
+
+    expect(
+      await screen.findByText(/on your garmin watch/i),
+    ).toBeInTheDocument();
+    expect(apiFetch).toHaveBeenLastCalledWith(
+      "/plans/push",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("surfaces an error if the watch push fails", async () => {
+    apiFetch.mockResolvedValueOnce({ plan });
+    render(<PlanView />);
+    expect(await screen.findByText("Week 1")).toBeInTheDocument();
+
+    apiFetch.mockRejectedValueOnce(new ApiError(409, "garmin_not_connected"));
+    fireEvent.click(screen.getByRole("button", { name: /send to watch/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /confirm/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /couldn't reach your watch/i,
+    );
+  });
 });
