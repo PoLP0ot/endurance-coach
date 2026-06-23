@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user
-from app.core.security import encrypt
+from app.core.security import decrypt, encrypt
 from app.jobs.queue import enqueue_garmin_import
 from app.models.garmin import GarminConnection
 from app.models.import_job import JOB_QUEUED, ImportJob
@@ -92,17 +92,30 @@ async def connect(
     provider: GarminProvider = Depends(get_garmin_provider),
     enqueue: Enqueuer = Depends(get_enqueuer),
 ) -> dict:
-    """Authenticate with Garmin, store the encrypted token, enqueue an import."""
+    """Authenticate with Garmin, store the encrypted token, enqueue an import.
+
+    If Garmin transiently blocks the login (rate-limit / 401) but we already
+    hold a valid stored token from a previous connect, reuse it instead of
+    failing — avoids losing access on repeated attempts.
+    """
+    existing = (
+        db.query(GarminConnection).filter_by(user_id=user.id).one_or_none()
+    )
     try:
         token = provider.login(body.username, body.password)
     except GarminMFARequired as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, "garmin_mfa_required") from exc
-    except GarminAccountLocked as exc:
-        raise HTTPException(status.HTTP_423_LOCKED, "garmin_account_locked") from exc
-    except GarminAuthError as exc:
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED, "garmin_auth_failed"
-        ) from exc
+    except (GarminAccountLocked, GarminAuthError) as exc:
+        if existing is not None and existing.encrypted_tokens:
+            token = decrypt(existing.encrypted_tokens)
+        elif isinstance(exc, GarminAccountLocked):
+            raise HTTPException(
+                status.HTTP_423_LOCKED, "garmin_account_locked"
+            ) from exc
+        else:
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "garmin_auth_failed"
+            ) from exc
 
     _get_or_create_user(db, user)
     conn = _upsert_connection(db, user.id, encrypt(token), body.username)

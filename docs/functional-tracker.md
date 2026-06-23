@@ -11,8 +11,8 @@
 - [x] 0.3 Rewrite `list_daily_health` (per-day get_stats/get_sleep_data/get_hrv_data, 28-day window, -1 sentinel cleaned) + fix `_client_from_token` to restore display_name (else usersummary 403s). VERIFIED on real account: RHR/sleep/HRV/steps/body-battery/stress now stored.
 - [x] 0.4 Streams now fetch+store (unblocked by the 0.3 display_name fix; get_activity_details works). VERIFIED: 43 stream rows in activity_metrics (~1MB raw each — slim later). Frontend parse → map/chart/laps tracked as 2.4.
 - [x] 0.1a "Sync now" button + Garmin status card in Settings (GarminCard) wired to POST /garmin/sync (uses the inline-import fallback in dev)
-- [ ] 0.1b Add ARQ cron (`cron_jobs` in WorkerSettings) for periodic Garmin sync + the weekly-email fan-out (currently never scheduled)
-- [ ] 0.5 Don't re-login when a valid stored token exists; surface MFA flow (code entry); add backoff on rate-limit
+- [x] 0.1b ARQ cron_jobs in WorkerSettings: daily Garmin re-sync 03:00 (`sync_all_garmin` fan-out) + weekly emails Mon 07:00. (Runs only when the worker+Redis are up — see 0.2.)
+- [x] 0.5 connect() reuses a valid stored token when Garmin transiently blocks login (rate-limit/401) instead of failing — fixes the retry-401 you hit. (MFA code-entry flow still TODO.)
 - [ ] 0.2 Document/scripts: run worker locally (`arq ...`) + Redis via docker-compose; keep inline fallback for dev. [U for managed Redis in prod]
 
 ## 🟠 Palier 1 — production / multi-user

@@ -7,6 +7,11 @@
 **Last completed:** US11b GDPR. Full feature set shipped (see below).
 **Currently working on:** Build loop "pleinement fonctionnel + design = prototype" — see `docs/build-plan.md` (6 phases driven by `docs/qa-checklist.md` AC IDs).
 
+### Functional-fix loop (started 2026-06-23) — see docs/functional-tracker.md
+Real Garmin account connected; data live in api/dev.db (uid via `SELECT user_id FROM garmin_connections LIMIT 1`; user marc@endurance.coach.fr set premium via `subscription_status='active'`). Servers run locally: API `:8001` (uvicorn, ABSOLUTE python path required in bg tasks), web `:3000` (pnpm dev). No Redis locally → import uses inline fallback.
+- **Done & verified:** cdc8ced (Redis-less inline import + garth error wrapping), a5aaa6f (0.3 real daily-health via per-day get_stats/get_sleep_data/get_hrv_data + `_client_from_token` display_name fix that also unblocked streams), 0.4 streams stored (43 rows), 7338aa4 (0.1a Sync-now card in settings), 0.5 connect() reuses stored token on login block, 0.1b ARQ cron_jobs (daily sync 03:00 + weekly email Mon 07:00).
+- **Next (loop):** Palier 2 (2.1 goal-banner race_date, 2.2 This-Week table, 2.3 /signals endpoint, 2.4 activity map/HR-chart/laps from stored streams, 2.5 push_workouts) → Palier 3 (tests for new code, LLM error handling, logging) → Palier 4 (Dockerfiles/compose/vercel scaffold). [U] = Paddle/Resend/Mapbox keys, Postgres prod, deploy, device Lighthouse, multi-client email.
+
 ### Build-loop progress (started 2026-06-22)
 - **Phase 0 ✅** (`fc3d38b`): added `openai` (imported by `services/llm.py` but missing from requirements — would crash at runtime), added `ruff` dep, restored `.github/workflows/ci.yml`, untracked `api/dev.db` + ignore `*.db`. Migrations confirmed SQLite-compatible (`alembic upgrade head` green). Runtime config is **SQLite** (`DATABASE_URL=sqlite:///./dev.db`), API on **:8001**.
 - **Phase 1.1 ✅** (`b1734cd`): replaced dark electric-blue theme with prototype's **warm-stone light** system (bg `#E9E4D8`, primary burnt-orange `#D9703A`, accent olive `#6E7644`, destructive rust, radius 3px). Tokens in `web/src/app/globals.css` (HSL channels), Tailwind colors now use `<alpha-value>` so opacity modifiers work; signature tokens exposed (ink/paper/line/olive/rust/taupe). Dropped forced `.dark`. Confirmed on screen (landing + login match prototype direction).

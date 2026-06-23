@@ -6,15 +6,17 @@ from __future__ import annotations
 
 from datetime import date
 
+from arq import cron
+
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.core.security import decrypt
 from app.models.garmin import GarminConnection
-from app.models.import_job import ImportJob
+from app.models.import_job import JOB_QUEUED, ImportJob
 from app.models.user import User
 from app.services.email import EmailProvider, build_weekly_email
 from app.services.garmin import GarminConnectProvider
-from app.services.garmin_import import run_import
+from app.services.garmin_import import resolve_since, run_import
 from app.services.llm import LLMProvider
 from app.services.subscriptions import is_premium
 
@@ -84,8 +86,40 @@ async def send_weekly_emails(ctx: dict) -> dict:
         db.close()
 
 
-class WorkerSettings:
-    """ARQ worker configuration."""
+async def sync_all_garmin(ctx: dict) -> dict:
+    """Scheduled fan-out: queue an incremental import for every connected user."""
+    db = SessionLocal()
+    try:
+        conns = (
+            db.query(GarminConnection).filter_by(status="connected").all()
+        )
+        queued = 0
+        for conn in conns:
+            job = ImportJob(user_id=conn.user_id, status=JOB_QUEUED)
+            db.add(job)
+            db.commit()
+            db.refresh(job)
+            since = resolve_since(conn, date.today())
+            await ctx["redis"].enqueue_job(
+                "import_garmin_activities", conn.user_id, job.id, since.isoformat()
+            )
+            queued += 1
+        return {"queued": queued}
+    finally:
+        db.close()
 
-    functions = [import_garmin_activities, send_weekly_email, send_weekly_emails]
+
+class WorkerSettings:
+    """ARQ worker configuration. Run with: arq app.jobs.worker.WorkerSettings"""
+
+    functions = [
+        import_garmin_activities,
+        send_weekly_email,
+        send_weekly_emails,
+        sync_all_garmin,
+    ]
+    cron_jobs = [
+        cron(sync_all_garmin, hour=3, minute=0),  # daily Garmin re-sync 03:00
+        cron(send_weekly_emails, weekday="mon", hour=7, minute=0),  # Mon 07:00
+    ]
     redis_settings = settings.redis_url
