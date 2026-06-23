@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { GarminCard } from "./garmin-card";
 
 type Phase = "loading" | "error" | "ready";
 
@@ -73,6 +74,7 @@ export function SettingsView() {
 
   return (
     <div className="space-y-6">
+      <GarminCard />
       <div className="space-y-4 rounded border border-line bg-card p-6">
         <div className="space-y-1.5">
           <Label htmlFor="display_name">Display name</Label>

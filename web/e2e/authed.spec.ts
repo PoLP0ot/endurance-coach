@@ -117,6 +117,11 @@ const API_FIXTURES: Record<string, unknown> = {
     is_premium: false,
     current_period_end: null,
   },
+  "/garmin/status": {
+    status: "connected",
+    garmin_username: "marc@example.com",
+    last_sync_at: "2026-06-23T07:30:00Z",
+  },
   "/activities": {
     windowed: false,
     next_cursor: null,
