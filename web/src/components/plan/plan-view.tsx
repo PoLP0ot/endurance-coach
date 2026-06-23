@@ -26,11 +26,21 @@ export function PlanView() {
   const [goal, setGoal] = useState<string>(GOALS[0].value);
   const [weeks, setWeeks] = useState(12);
   const [generating, setGenerating] = useState(false);
-  // Push-to-watch (A14). Backend GarminProvider.push_workouts is deferred (Phase 5);
-  // this drives the UI flow only.
-  const [watch, setWatch] = useState<"idle" | "confirm" | "sending" | "synced">(
-    "idle",
-  );
+  // Push-to-watch (A14): POST /plans/push uploads this week's structured workout.
+  const [watch, setWatch] = useState<
+    "idle" | "confirm" | "sending" | "synced" | "error"
+  >("idle");
+
+  const sendToWatch = async () => {
+    setWatch("sending");
+    try {
+      const token = await getAccessToken();
+      await apiFetch("/plans/push", { method: "POST", token });
+      setWatch("synced");
+    } catch {
+      setWatch("error");
+    }
+  };
 
   const load = useCallback(async () => {
     setPhase("loading");
@@ -144,19 +154,40 @@ export function PlanView() {
                 <Watch className="h-4 w-4" aria-hidden />
                 This week&apos;s workouts are on your Garmin watch.
               </p>
-            ) : watch === "confirm" ? (
+            ) : watch === "confirm" || watch === "sending" ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-ink-soft">
                   Send this week&apos;s structured workouts to your watch?
                 </p>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => setWatch("synced")}>
-                    Confirm
+                  <Button
+                    size="sm"
+                    onClick={sendToWatch}
+                    disabled={watch === "sending"}
+                  >
+                    {watch === "sending" && (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    )}
+                    {watch === "sending" ? "Sending…" : "Confirm"}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setWatch("idle")}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setWatch("idle")}
+                    disabled={watch === "sending"}
+                  >
                     Cancel
                   </Button>
                 </div>
+              </div>
+            ) : watch === "error" ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p role="alert" className="text-sm text-destructive">
+                  We couldn&apos;t reach your watch. Connect Garmin and try again.
+                </p>
+                <Button size="sm" variant="ghost" onClick={() => setWatch("idle")}>
+                  Dismiss
+                </Button>
               </div>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">

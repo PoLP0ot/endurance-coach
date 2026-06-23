@@ -11,8 +11,11 @@ from app.core.db import get_db
 from app.core.deps import get_llm_provider, require_premium
 from app.models.plan import TrainingPlan
 from app.models.user import User
+from app.routers.garmin import get_garmin_provider
 from app.services.dashboard import build_dashboard
+from app.services.garmin import GarminProvider
 from app.services.plans import create_plan, current_plan
+from app.services.workout_push import push_current_week
 
 router = APIRouter(prefix="/plans", tags=["plans"])
 
@@ -69,3 +72,25 @@ async def get_current_plan(
     """Return the user's active plan, or null when none exists."""
     plan = current_plan(db, user.id)
     return {"plan": _serialize(plan) if plan is not None else None}
+
+
+_PUSH_ERRORS = {
+    "garmin_not_connected": status.HTTP_409_CONFLICT,
+    "no_active_plan": status.HTTP_409_CONFLICT,
+    "no_current_week": status.HTTP_409_CONFLICT,
+}
+
+
+@router.post("/push", status_code=status.HTTP_202_ACCEPTED)
+async def push_to_watch(
+    user: User = Depends(require_premium),
+    db: Session = Depends(get_db),
+    provider: GarminProvider = Depends(get_garmin_provider),
+) -> dict:
+    """Send this week's structured workout to the user's Garmin watch (A14)."""
+    try:
+        result = push_current_week(db, user.id, provider, date.today())
+    except ValueError as exc:
+        code = _PUSH_ERRORS.get(str(exc), status.HTTP_400_BAD_REQUEST)
+        raise HTTPException(code, str(exc)) from exc
+    return result

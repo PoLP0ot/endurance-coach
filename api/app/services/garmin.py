@@ -85,6 +85,10 @@ class GarminProvider(Protocol):
         """Return detailed time-series streams for one activity."""
         ...
 
+    def push_workouts(self, token: str, workouts: list[dict]) -> int:
+        """Upload structured workouts to Garmin Connect; return the count pushed."""
+        ...
+
 
 class GarminConnectProvider:
     """Default implementation backed by python-garminconnect.
@@ -160,6 +164,27 @@ class GarminConnectProvider:
     def get_activity_streams(self, token: str, garmin_activity_id: str) -> dict:
         client = self._client_from_token(token)
         return client.get_activity_details(garmin_activity_id)
+
+    def push_workouts(self, token: str, workouts: list[dict]) -> int:
+        """Create structured workouts in Garmin Connect via the workout-service.
+
+        Each ``workout`` is a Garmin workout JSON (see ``build_garmin_workout``).
+        Returns the number successfully created. A single failure does not abort
+        the rest — pushing is best-effort, like the import pipeline.
+        """
+        client = self._client_from_token(token)
+        pushed = 0
+        for workout in workouts:
+            try:
+                client.garth.connectapi(
+                    "/workout-service/workout",
+                    method="POST",
+                    json=workout,
+                )
+                pushed += 1
+            except Exception:  # noqa: BLE001 — one bad upload shouldn't sink the batch
+                continue
+        return pushed
 
     @staticmethod
     def _client_from_token(token: str):
