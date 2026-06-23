@@ -105,17 +105,20 @@ async def connect(
         token = provider.login(body.username, body.password)
     except GarminMFARequired as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, "garmin_mfa_required") from exc
-    except (GarminAccountLocked, GarminAuthError) as exc:
+    except GarminAccountLocked as exc:
+        # Transient rate-limit (Garmin 429), NOT a credential failure: reuse a
+        # previously-authenticated stored token rather than losing access.
         if existing is not None and existing.encrypted_tokens:
             token = decrypt(existing.encrypted_tokens)
-        elif isinstance(exc, GarminAccountLocked):
+        else:
             raise HTTPException(
                 status.HTTP_423_LOCKED, "garmin_account_locked"
             ) from exc
-        else:
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED, "garmin_auth_failed"
-            ) from exc
+    except GarminAuthError as exc:
+        # Wrong credentials — never reuse a stored token; require re-auth.
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "garmin_auth_failed"
+        ) from exc
 
     _get_or_create_user(db, user)
     conn = _upsert_connection(db, user.id, encrypt(token), body.username)
