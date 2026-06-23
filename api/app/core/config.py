@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # App
     environment: str = "development"
     cors_origins: str = "http://localhost:3000"
+    log_level: str = "INFO"
 
     # Supabase / Auth
     supabase_url: str = ""

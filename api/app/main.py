@@ -4,6 +4,10 @@ Wires CORS, a consistent error envelope, and routers.
 """
 from __future__ import annotations
 
+import logging
+import time
+import uuid
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +15,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
+from app.core.logging import configure_logging
 from app.routers import (
     activities,
     chat,
@@ -28,6 +33,11 @@ from app.services.llm import LLMError
 
 
 def create_app() -> FastAPI:
+    configure_logging(
+        settings.log_level, json_logs=settings.environment != "development"
+    )
+    request_logger = logging.getLogger("app.request")
+
     app = FastAPI(
         title="Endurance Coach API",
         version="0.1.0",
@@ -41,6 +51,39 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        """Emit one structured line per request with a correlation id + latency."""
+        request_id = uuid.uuid4().hex[:12]
+        start = time.perf_counter()
+        try:
+            response = await call_next(request)
+        except Exception:
+            elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
+            request_logger.exception(
+                "request_failed",
+                extra={
+                    "request_id": request_id,
+                    "method": request.method,
+                    "path": request.url.path,
+                    "duration_ms": elapsed_ms,
+                },
+            )
+            raise
+        elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
+        request_logger.info(
+            "request",
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": response.status_code,
+                "duration_ms": elapsed_ms,
+            },
+        )
+        response.headers["X-Request-ID"] = request_id
+        return response
 
     # --- Consistent error envelope: {"error": {"code", "message", "details"}} ---
     @app.exception_handler(StarletteHTTPException)
