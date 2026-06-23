@@ -27,23 +27,23 @@
 
 ## 🟡 Palier 2 — prototype features needing backend data
 
-- [ ] 2.1 Goal banner: add `race_name`/`race_date` to profile (model+migration+API+UI) → dashboard "Road to <race>" banner with countdown + progress
-- [ ] 2.2 "This Week at a Glance" weekly aggregate in analytics + dashboard table
-- [ ] 2.3 `/signals` endpoint with real per-signal narration (replace client-templated text in signals-view)
-- [ ] 2.4 Activity detail: render map + HR/pace chart + laps from real streams (after 0.4)
-- [ ] 2.5 Push-to-watch backend `GarminProvider.push_workouts()` (real workout upload) wired to the plan button
-- [ ] 2.6 Goal-variant metrics (weight-loss/hyrox/triathlon) — needs weight/calorie + multi-sport load fields
+- [x] 2.1 Goal banner: `race_name`/`race_date` on profile (model, migration 0008, API, settings UI) → dashboard countdown + progress. VERIFIED on real data (Paris Marathon, 82d/12w, 52%).
+- [x] 2.2 "This Week at a Glance" weekly aggregate (this/last week distance/load/sessions/time) in dashboard + WeekGlance table.
+- [x] 2.3 `/signals` endpoint: deterministic question-cards from real facts; premium → LLM-narrated, free → templated, best-effort fallback. signals-view fetches it.
+- [x] 2.4 Activity detail: `normalize_streams` (route polyline + HR/elevation chart + per-km splits from raw Garmin detail; no Mapbox). VERIFIED on real geo activity (Brussels). Rendered desktop+mobile.
+- [x] 2.5 Push-to-watch: `GarminProvider.push_workouts` (workout-service POST) + `workout_push` service (current-week → Garmin workout JSON) + `POST /plans/push`, wired to plan button. (Live Garmin upload not exercised to avoid account lock; verified via fake provider + real rows.)
+- [x] 2.6 Goal-aware "Your Body" 7-day health snapshot (HRV/RHR/sleep/steps/battery/stress/weight); goal selects featured metric. Fixed an unbounded-window bug. VERIFIED on real import.
 
 ## 🟢 Palier 3 — quality / tests / robustness
 
-- [ ] 3.1 Tests for new code: inline-import fallback, signals-view, coach-onboard, push-to-watch, goal-lens, reskinned email
-- [ ] 3.2 LLM error/timeout/quota handling (chat/analysis/plan) with clear UI messages + retry
-- [ ] 3.3 Structured logging (api) + error surface; basic request logging
-- [ ] 3.4 a11y + responsive verification pass (keyboard, 375/768/1440) [U for real-device Lighthouse]
+- [x] 3.1 Tests for new code: inline-import fallback (2), push-to-watch flow (2), signals-view (3), + goal/this-week/streams/health/signals service tests inline with each feature.
+- [x] 3.2 LLM error/timeout/quota handling: typed `LLMError` (timeout/rate_limit/quota/auth/provider), 30s timeout, global handler → 503/502 with reason; chat + analysis show "coach unavailable" + retry.
+- [x] 3.3 Structured JSON logging (`JsonFormatter`, `configure_logging`, `LOG_LEVEL`) + request middleware (method/path/status/duration_ms + `X-Request-ID`).
+- [x] 3.4 a11y + responsive: new components use role/aria-label/role=alert + semantic tables; Playwright authed capture green desktop+mobile. [U] real-device Lighthouse.
 
 ## 🔵 Palier 4 — deployment (scaffold; execution is USER)
 
-- [ ] 4.1 Dockerfile(s) for api + worker; docker-compose (api, worker, redis, postgres) for parity
-- [ ] 4.2 `web` Vercel config + env documentation
+- [x] 4.1 `api/Dockerfile` (slim, non-root, healthcheck) + `.dockerignore` + `docker-compose.yml` (postgres+redis+api+worker, health-gated). compose config validated. [U] live build/run = deploy step.
+- [x] 4.2 `web/vercel.json` (nextjs, EU cdg1, security headers) + README deployment section (compose, Vercel env vars, api env table).
 - [U] 4.3 Provision Railway/Fly (EU) + managed Redis/Postgres; deploy
 - [U] 4.4 Domain, HTTPS, uptime monitoring, Sentry
