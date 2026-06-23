@@ -132,6 +132,37 @@ const API_FIXTURES: Record<string, unknown> = {
     is_premium: false,
     current_period_end: null,
   },
+  "/signals": {
+    signals: [
+      {
+        key: "fitness",
+        eyebrow: "Fitness · CTL trend",
+        question: "How is my fitness trending?",
+        points: Array.from({ length: 21 }, (_, i) => 50 + i * 0.6),
+        color: "text-primary",
+        interpretation:
+          "You're in the productive training zone. Fitness is climbing steadily and fatigue is where we want it 12 weeks out from Paris.",
+      },
+      {
+        key: "form",
+        eyebrow: "Form · TSB balance",
+        question: "Is my form race-ready?",
+        points: Array.from({ length: 21 }, (_, i) => 4 - i * 0.3),
+        color: "text-olive",
+        interpretation:
+          "You're carrying productive fatigue — normal for a build block. Keep an eye on recovery.",
+      },
+      {
+        key: "recovery",
+        eyebrow: "Recovery · today",
+        question: "Am I recovered enough to push?",
+        points: null,
+        color: "text-accent",
+        interpretation:
+          "Recovery is strong at 74/100 — green light for quality work today.",
+      },
+    ],
+  },
   "/garmin/status": {
     status: "connected",
     garmin_username: "marc@example.com",

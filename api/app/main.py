@@ -20,6 +20,7 @@ from app.routers import (
     gdpr,
     health,
     plans,
+    signals,
     subscriptions,
     users,
 )
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(garmin.router)
     app.include_router(dashboard.router)
+    app.include_router(signals.router)
     app.include_router(activities.router)
     app.include_router(chat.router)
     app.include_router(plans.router)

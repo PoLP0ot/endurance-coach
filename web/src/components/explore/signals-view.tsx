@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
-import { dashboardSchema, type Dashboard } from "@/schemas/dashboard";
+import { signalsResponseSchema, type Signal } from "@/schemas/signals";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -13,53 +13,7 @@ import { Sparkline } from "./sparkline";
 type Phase =
   | { kind: "loading" }
   | { kind: "error" }
-  | { kind: "ready"; data: Dashboard };
-
-interface SignalCard {
-  eyebrow: string;
-  question: string;
-  points?: number[];
-  color?: string;
-  interpretation: string;
-}
-
-/** Build "answer a question, don't dump a metric" cards from real dashboard facts. */
-function buildSignals(d: Dashboard): SignalCard[] {
-  const ctl = d.load_series.map((p) => p.ctl);
-  const tsb = d.fitness.tsb;
-  const recovery = d.recovery;
-  return [
-    {
-      eyebrow: "Fitness · CTL trend",
-      question: "How is my fitness trending?",
-      points: ctl,
-      color: "text-primary",
-      interpretation: `${d.form.headline} ${d.form.detail}`,
-    },
-    {
-      eyebrow: "Form · TSB balance",
-      question: "Is my form race-ready?",
-      points: d.load_series.map((p) => p.tsb),
-      color: "text-olive",
-      interpretation:
-        tsb > 5
-          ? "You're fresh — TSB is positive, so you're primed for a hard session or a race."
-          : tsb < -15
-            ? "Fatigue is deep right now. Protect recovery before adding more intensity."
-            : "You're carrying productive fatigue — normal for a build block. Keep an eye on recovery.",
-    },
-    {
-      eyebrow: "Recovery · today",
-      question: "Am I recovered enough to push?",
-      interpretation:
-        recovery >= 70
-          ? `Recovery is strong at ${recovery}/100 — green light for quality work today.`
-          : recovery >= 45
-            ? `Recovery is moderate at ${recovery}/100 — train, but hold back on top-end intensity.`
-            : `Recovery is low at ${recovery}/100 — prioritise easy aerobic or rest today.`,
-    },
-  ];
-}
+  | { kind: "ready"; signals: Signal[] };
 
 /** Signals / Explore: every metric framed as a question with a coach answer. */
 export function SignalsView() {
@@ -69,8 +23,9 @@ export function SignalsView() {
     setPhase({ kind: "loading" });
     try {
       const token = await getAccessToken();
-      const raw = await apiFetch<unknown>("/dashboard", { token });
-      setPhase({ kind: "ready", data: dashboardSchema.parse(raw) });
+      const raw = await apiFetch<unknown>("/signals", { token });
+      const { signals } = signalsResponseSchema.parse(raw);
+      setPhase({ kind: "ready", signals });
     } catch {
       setPhase({ kind: "error" });
     }
@@ -88,7 +43,7 @@ export function SignalsView() {
       <ErrorState message="We couldn't load your signals." onRetry={() => void load()} />
     );
   }
-  if (phase.data.totals.activity_count === 0) {
+  if (phase.signals.length === 0) {
     return (
       <EmptyState
         icon={Activity}
@@ -98,7 +53,7 @@ export function SignalsView() {
     );
   }
 
-  const signals = buildSignals(phase.data);
+  const { signals } = phase;
 
   return (
     <div className="space-y-6">
