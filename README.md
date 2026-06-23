@@ -58,6 +58,45 @@ cd api && pytest -q && ruff check .
 cd web && pnpm vitest run && pnpm lint && pnpm build
 ```
 
+## Deployment
+
+### Full stack with Docker Compose (local prod-parity)
+
+Brings up Postgres, Redis, the API, and the ARQ worker. The API runs Alembic
+migrations on start and serves on host port **8001**.
+
+```bash
+cp api/.env.example api/.env   # fill in secrets (see table below)
+docker compose up --build      # api → http://localhost:8001
+```
+
+`docker-compose.yml` overrides `DATABASE_URL`/`REDIS_URL` to the compose network,
+so you only need the secret values in `api/.env`.
+
+### Frontend on Vercel
+
+`web/vercel.json` pins the framework, the EU region (`cdg1`), and baseline
+security headers. Set these project env vars in the Vercel dashboard:
+
+| Var | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | Base URL of the deployed FastAPI API |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
+
+### API env vars (`api/.env`)
+
+| Var | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Postgres DSN (SQLite `sqlite:///./dev.db` for local dev) |
+| `REDIS_URL` | Redis DSN for ARQ jobs |
+| `SUPABASE_URL` / `SUPABASE_JWT_SECRET` | Auth: JWT verification |
+| `OPENAI_API_KEY` | LLM narration (chat / analysis / plan) |
+| `ENCRYPTION_KEY` | Fernet key encrypting Garmin tokens at rest |
+| `LOG_LEVEL` | Log level (default `INFO`); JSON logs outside `development` |
+| `RESEND_API_KEY` | Weekly email send (optional) |
+| `PADDLE_*` | Checkout + webhook (optional) |
+
 ## Architecture notes
 
 - **GarminProvider** isolates the unofficial `garminconnect` library so it can
