@@ -66,12 +66,15 @@ Brings up Postgres, Redis, the API, and the ARQ worker. The API runs Alembic
 migrations on start and serves on host port **8001**.
 
 ```bash
-cp api/.env.example api/.env   # fill in secrets (see table below)
-docker compose up --build      # api → http://localhost:8001
+cp api/.env.example api/.env   # app secrets (OpenAI, Supabase, ENCRYPTION_KEY)
+# Datastore passwords are NOT in the compose file — supply them at run time:
+POSTGRES_PASSWORD=change-me REDIS_PASSWORD=change-me docker compose up --build
 ```
 
-`docker-compose.yml` overrides `DATABASE_URL`/`REDIS_URL` to the compose network,
-so you only need the secret values in `api/.env`.
+Compose builds `DATABASE_URL`/`REDIS_URL` from `POSTGRES_PASSWORD`/`REDIS_PASSWORD`
+(read from a root `.env` or your shell — it **fails fast** if they're unset) and
+binds Postgres/Redis to `127.0.0.1` only. `ENVIRONMENT` defaults to
+`development`; set it to `production` only against real managed datastores.
 
 ### Frontend on Vercel
 
