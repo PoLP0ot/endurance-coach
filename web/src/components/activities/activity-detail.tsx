@@ -16,6 +16,7 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { Button } from "@/components/ui/button";
+import { ActivityStreamsView } from "./activity-streams";
 
 type Phase = "loading" | "error" | "ready";
 type AnalysisState =
@@ -102,6 +103,8 @@ export function ActivityDetail({ id }: { id: string }) {
           value={activity.tss !== null ? activity.tss.toFixed(0) : "—"}
         />
       </div>
+
+      {activity.streams && <ActivityStreamsView streams={activity.streams} />}
 
       <section
         aria-label="What this run means"

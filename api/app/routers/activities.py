@@ -22,6 +22,7 @@ from app.services.activity_history import (
     MAX_LIMIT,
     list_activities,
 )
+from app.services.streams import normalize_streams
 from app.services.subscriptions import FREE_HISTORY_DAYS, is_premium
 
 router = APIRouter(prefix="/activities", tags=["activities"])
@@ -76,7 +77,7 @@ async def get_activity(
         "elevation_gain_m": activity.elevation_gain_m,
         "avg_power_w": activity.avg_power_w,
         "tss": activity.tss,
-        "streams": streams.data if streams is not None else None,
+        "streams": normalize_streams(streams.data) if streams is not None else None,
     }
 
 

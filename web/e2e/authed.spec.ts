@@ -190,7 +190,26 @@ const API_FIXTURES: Record<string, unknown> = {
     elevation_gain_m: 142,
     avg_power_w: null,
     tss: 96,
-    streams: null,
+    streams: {
+      has_route: true,
+      route: Array.from({ length: 40 }, (_, i) => [
+        50.84 + Math.sin(i / 6) * 0.01 + i * 0.0004,
+        4.35 + Math.cos(i / 5) * 0.012,
+      ]),
+      samples: Array.from({ length: 60 }, (_, i) => ({
+        t: i * 60,
+        hr: 140 + Math.round(Math.sin(i / 8) * 18 + i * 0.2),
+        pace_s_per_km: 250 + Math.round(Math.cos(i / 7) * 20),
+        elevation_m: 40 + Math.round(Math.sin(i / 10) * 12),
+        distance_m: i * 230,
+      })),
+      splits: [
+        { km: 1, duration_s: 248 },
+        { km: 2, duration_s: 242 },
+        { km: 3, duration_s: 255 },
+        { km: 4, duration_s: 239 },
+      ],
+    },
   },
   "/activities/a1/analysis": {
     activity_id: "a1",

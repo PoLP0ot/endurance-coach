@@ -65,13 +65,28 @@ def test_activity_detail_with_streams(app_client, db_session, seed_user):
     db_session.add(a)
     db_session.commit()
     db_session.add(
-        ActivityMetric(activity_id=a.id, kind="stream", data={"hr": [120, 130]})
+        ActivityMetric(
+            activity_id=a.id,
+            kind="stream",
+            data={
+                "metricDescriptors": [
+                    {"metricsIndex": 0, "key": "sumElapsedDuration"},
+                    {"metricsIndex": 1, "key": "directHeartRate"},
+                ],
+                "activityDetailMetrics": [
+                    {"metrics": [0.0, 120.0]},
+                    {"metrics": [10.0, 130.0]},
+                ],
+            },
+        )
     )
     db_session.commit()
 
     body = app_client.get(f"/activities/{a.id}").json()
     assert body["id"] == a.id
-    assert body["streams"] == {"hr": [120, 130]}
+    # Raw Garmin detail is normalized to a compact client payload.
+    assert body["streams"]["has_route"] is False
+    assert [s["hr"] for s in body["streams"]["samples"]] == [120, 130]
 
 
 def test_activity_detail_404_for_other_user(app_client, db_session, seed_user):
