@@ -24,6 +24,7 @@ from app.routers import (
     subscriptions,
     users,
 )
+from app.services.llm import LLMError
 
 
 def create_app() -> FastAPI:
@@ -48,6 +49,23 @@ def create_app() -> FastAPI:
             status_code=exc.status_code,
             content={"error": {"code": exc.status_code, "message": exc.detail}},
             headers=getattr(exc, "headers", None),
+        )
+
+    @app.exception_handler(LLMError)
+    async def llm_exc_handler(request: Request, exc: LLMError):
+        # 503 when a retry could plausibly succeed (timeout / throttle / provider
+        # blip), 502 for terminal failures (quota exhausted, auth, misconfig).
+        code = 503 if exc.retryable else 502
+        return JSONResponse(
+            status_code=code,
+            content={
+                "error": {
+                    "code": code,
+                    "message": "coach_unavailable",
+                    "reason": exc.reason,
+                    "retryable": exc.retryable,
+                }
+            },
         )
 
     @app.exception_handler(RequestValidationError)

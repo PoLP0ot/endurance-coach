@@ -49,3 +49,40 @@ def test_chat_round_trip(app_client, db_session, seed_user):
 def test_chat_rejects_empty_message(app_client, db_session, seed_user):
     _premium(db_session)
     assert app_client.post("/chat", json={"message": ""}).status_code == 422
+
+
+def test_chat_maps_llm_failure_to_clean_status(app_client, db_session, seed_user):
+    from app.services.llm import LLMError
+
+    _premium(db_session)
+
+    class _RetryableLLM:
+        def model_for(self, task):  # noqa: ANN001
+            return "stub"
+
+        def narrate(self, task, facts, instruction):  # noqa: ANN001
+            raise LLMError("timeout", retryable=True)
+
+    class _TerminalLLM:
+        def model_for(self, task):  # noqa: ANN001
+            return "stub"
+
+        def narrate(self, task, facts, instruction):  # noqa: ANN001
+            raise LLMError("quota", retryable=False)
+
+    app.dependency_overrides[get_llm_provider] = lambda: _RetryableLLM()
+    try:
+        res = app_client.post("/chat", json={"message": "hi"})
+        assert res.status_code == 503
+        assert res.json()["error"]["reason"] == "timeout"
+        assert res.json()["error"]["retryable"] is True
+    finally:
+        app.dependency_overrides.pop(get_llm_provider, None)
+
+    app.dependency_overrides[get_llm_provider] = lambda: _TerminalLLM()
+    try:
+        res = app_client.post("/chat", json={"message": "hi"})
+        assert res.status_code == 502
+        assert res.json()["error"]["reason"] == "quota"
+    finally:
+        app.dependency_overrides.pop(get_llm_provider, None)

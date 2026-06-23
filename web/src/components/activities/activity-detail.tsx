@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { ApiError, apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, isCoachUnavailable } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import {
   activityDetailSchema,
@@ -24,6 +24,7 @@ type AnalysisState =
   | { kind: "loading" }
   | { kind: "premium" }
   | { kind: "error" }
+  | { kind: "unavailable" }
   | { kind: "ready"; data: ActivityAnalysis };
 
 /** Activity detail with the coach-first "What This Run Means" analysis (US3). */
@@ -57,6 +58,8 @@ export function ActivityDetail({ id }: { id: string }) {
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
         setAnalysis({ kind: "premium" });
+      } else if (isCoachUnavailable(err)) {
+        setAnalysis({ kind: "unavailable" });
       } else {
         setAnalysis({ kind: "error" });
       }
@@ -150,6 +153,17 @@ export function ActivityDetail({ id }: { id: string }) {
           <p role="alert" className="mt-3 text-sm text-destructive">
             We couldn&apos;t generate an analysis. Please try again.
           </p>
+        )}
+
+        {analysis.kind === "unavailable" && (
+          <div role="alert" className="mt-3">
+            <p className="text-sm text-muted-foreground">
+              Your coach is temporarily unavailable. Please try again in a moment.
+            </p>
+            <Button className="mt-3" variant="ghost" size="sm" onClick={analyze}>
+              Retry
+            </Button>
+          </div>
         )}
 
         {analysis.kind === "ready" && (

@@ -14,6 +14,11 @@ export class ApiError extends Error {
   }
 }
 
+/** True when the backend reported the LLM coach is unavailable (502/503). */
+export function isCoachUnavailable(err: unknown): boolean {
+  return err instanceof ApiError && (err.status === 502 || err.status === 503);
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string } = {},

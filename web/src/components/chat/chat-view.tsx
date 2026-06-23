@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send } from "lucide-react";
-import { ApiError, apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, isCoachUnavailable } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import {
   chatHistorySchema,
@@ -67,13 +67,16 @@ export function ChatView() {
         body: JSON.stringify({ message: text }),
       });
       setMessages((prev) => [...prev, chatMessageSchema.parse(raw)]);
-    } catch {
+    } catch (err) {
+      const content = isCoachUnavailable(err)
+        ? "Your coach is temporarily unavailable. Please try again in a moment."
+        : "Sorry — I couldn't respond just now. Please try again.";
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           role: "assistant",
-          content: "Sorry — I couldn't respond just now. Please try again.",
+          content,
           created_at: null,
         },
       ]);
