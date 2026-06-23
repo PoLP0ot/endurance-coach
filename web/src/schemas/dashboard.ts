@@ -39,9 +39,22 @@ export const thisWeekSchema = z.object({
   week_start: z.string(),
 });
 
+export const healthSchema = z.object({
+  resting_hr: z.number().nullable(),
+  hrv: z.number().nullable(),
+  sleep_score: z.number().nullable(),
+  steps: z.number().nullable(),
+  body_battery: z.number().nullable(),
+  stress_avg: z.number().nullable(),
+  weight_kg: z.number().nullable(),
+  days: z.number(),
+  feature: z.string(),
+});
+
 export const dashboardSchema = z.object({
   goal: goalSchema.nullable(),
   this_week: thisWeekSchema,
+  health: healthSchema.nullable(),
   fitness: z.object({ ctl: z.number(), atl: z.number(), tsb: z.number() }),
   form: z.object({ band: z.string(), headline: z.string(), detail: z.string() }),
   recovery: z.number(),
@@ -58,3 +71,4 @@ export type Dashboard = z.infer<typeof dashboardSchema>;
 export type LoadPoint = z.infer<typeof loadPointSchema>;
 export type Goal = z.infer<typeof goalSchema>;
 export type ThisWeek = z.infer<typeof thisWeekSchema>;
+export type Health = z.infer<typeof healthSchema>;

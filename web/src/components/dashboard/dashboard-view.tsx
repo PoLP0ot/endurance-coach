@@ -17,6 +17,7 @@ import { CoachNote } from "./coach-note";
 import { TrainingLoadChart } from "./training-load-chart";
 import { GoalBanner } from "./goal-banner";
 import { WeekGlance } from "./week-glance";
+import { BodyCard } from "./body-card";
 
 type Phase =
   | { kind: "loading" }
@@ -134,6 +135,7 @@ export function DashboardView() {
         />
       </div>
       <WeekGlance data={data.this_week} />
+      {data.health && <BodyCard health={data.health} />}
       <TrainingLoadChart data={data.load_series} />
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">

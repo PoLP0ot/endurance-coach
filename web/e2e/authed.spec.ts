@@ -42,6 +42,17 @@ const API_FIXTURES: Record<string, unknown> = {
       last_week: { activity_count: 5, distance_m: 52100, tss: 312, duration_s: 18600 },
       week_start: "2026-06-22",
     },
+    health: {
+      resting_hr: 48,
+      hrv: 52,
+      sleep_score: 81,
+      steps: 9840,
+      body_battery: 76,
+      stress_avg: 32,
+      weight_kg: 71.2,
+      days: 7,
+      feature: "hrv",
+    },
     fitness: { ctl: 62, atl: 71, tsb: -9 },
     form: {
       band: "Productive",

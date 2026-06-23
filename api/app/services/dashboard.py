@@ -65,6 +65,52 @@ def _build_goal(user: User | None, today: date, first_activity: date | None) -> 
     }
 
 
+# Metric the goal "lens" features first in the body snapshot (A13).
+GOAL_FEATURE = {
+    "marathon": "hrv",
+    "triathlon": "hrv",
+    "hyrox": "body_battery",
+    "weight_loss": "weight_kg",
+    "health": "steps",
+}
+
+
+def _avg(values: list[float | int | None]) -> float | None:
+    """Average of the non-null values, or None when there are none."""
+    present = [v for v in values if v is not None]
+    return round(sum(present) / len(present), 1) if present else None
+
+
+def _build_health(db: Session, user_id: str, today: date, goal: str | None) -> dict | None:
+    """7-day body snapshot (latest + averages) from imported daily health."""
+    start = today - timedelta(days=6)
+    rows = list(
+        db.execute(
+            select(DailyHealth)
+            .where(
+                DailyHealth.user_id == user_id,
+                DailyHealth.day >= start,
+                DailyHealth.day <= today,
+            )
+            .order_by(DailyHealth.day)
+        ).scalars()
+    )
+    if not rows:
+        return None
+    latest = rows[-1]
+    return {
+        "resting_hr": latest.resting_hr,
+        "hrv": _avg([r.hrv for r in rows]),
+        "sleep_score": _avg([r.sleep_score for r in rows]),
+        "steps": _avg([r.steps for r in rows]),
+        "body_battery": latest.body_battery,
+        "stress_avg": _avg([r.stress_avg for r in rows]),
+        "weight_kg": next((r.weight_kg for r in reversed(rows) if r.weight_kg), None),
+        "days": len(rows),
+        "feature": GOAL_FEATURE.get(goal or "", "hrv"),
+    }
+
+
 def _build_this_week(activities: list[Activity], today: date) -> dict:
     """This-week vs last-week aggregate (ISO weeks, Monday-anchored)."""
     monday = today - timedelta(days=today.weekday())
@@ -138,6 +184,7 @@ def build_dashboard(
     first_activity = activities[0].start_time.date() if activities else None
     goal = _build_goal(user, today, first_activity)
     this_week = _build_this_week(activities, today)
+    health = _build_health(db, user_id, today, user.primary_goal if user else None)
 
     window_activities = [a for a in activities if a.start_time.date() >= start]
     total_distance = sum(a.distance_m or 0.0 for a in window_activities)
@@ -159,6 +206,7 @@ def build_dashboard(
     return {
         "goal": goal,
         "this_week": this_week,
+        "health": health,
         "fitness": {
             "ctl": round(current.ctl, 1),
             "atl": round(current.atl, 1),

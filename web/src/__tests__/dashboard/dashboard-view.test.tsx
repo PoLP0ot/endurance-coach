@@ -22,6 +22,7 @@ const payload = {
     last_week: emptyWeek,
     week_start: "2026-06-22",
   },
+  health: null,
   fitness: { ctl: 42, atl: 55, tsb: -13 },
   form: {
     band: "productive",

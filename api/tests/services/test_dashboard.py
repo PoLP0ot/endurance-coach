@@ -68,6 +68,30 @@ def test_build_dashboard_reflects_load(db_session, seed_user):
     }
 
 
+def test_build_dashboard_health_snapshot(db_session, seed_user):
+    today = date(2026, 6, 22)
+    db_session.add(_activity(seed_user.id, datetime(2026, 6, 20, 7, 0, tzinfo=UTC)))
+    for i in range(3):
+        db_session.add(
+            DailyHealth(
+                user_id=seed_user.id,
+                day=today - timedelta(days=i),
+                resting_hr=50 + i,
+                hrv=45.0 + i,
+                steps=9000 + i * 100,
+                weight_kg=71.0 + i * 0.1,
+            )
+        )
+    db_session.commit()
+
+    data = build_dashboard(db_session, seed_user.id, today=today)
+    assert data["health"] is not None
+    assert data["health"]["days"] == 3
+    assert data["health"]["resting_hr"] == 50  # latest (i == 0 is today)
+    assert data["health"]["hrv"] == 46.0  # avg of 45,46,47
+    assert data["health"]["feature"] in {"hrv", "steps", "weight_kg", "body_battery"}
+
+
 def test_build_dashboard_isolates_users(db_session, seed_user):
     today = date(2026, 6, 22)
     when = datetime(2026, 6, 20, 7, 0, tzinfo=UTC)
