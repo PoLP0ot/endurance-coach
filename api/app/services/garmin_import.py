@@ -6,6 +6,7 @@ GarminProvider; nothing here imports it directly.
 """
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date, datetime, timedelta
 
@@ -33,6 +34,8 @@ DEFAULT_LOOKBACK_DAYS = 365
 DEFAULT_STREAM_CAP = 1000
 
 ProgressFn = Callable[[str], None]
+
+logger = logging.getLogger(__name__)
 
 
 def downsample(samples: Sequence, cap: int) -> list:
@@ -219,8 +222,12 @@ def run_import(
         n_act = upsert_activities(db, user_id, activities)
 
         progress("Fetching health data…")
-        health = provider.list_daily_health(token, since)
-        n_health = upsert_daily_health(db, user_id, health)
+        try:
+            health = provider.list_daily_health(token, since)
+            n_health = upsert_daily_health(db, user_id, health)
+        except Exception as exc:  # noqa: BLE001 — health is best-effort
+            logger.warning("Garmin health fetch failed (%s); continuing", exc)
+            n_health = 0
 
         progress("Analyzing metrics…")
         if fetch_streams:
@@ -228,8 +235,17 @@ def run_import(
                 aid = _activity_id(db, user_id, a.garmin_activity_id)
                 if aid is None:
                     continue
-                streams = provider.get_activity_streams(token, a.garmin_activity_id)
-                store_streams(db, aid, streams, cap=stream_cap)
+                try:
+                    streams = provider.get_activity_streams(
+                        token, a.garmin_activity_id
+                    )
+                    store_streams(db, aid, streams, cap=stream_cap)
+                except Exception as exc:  # noqa: BLE001 — streams are best-effort
+                    logger.warning(
+                        "Garmin stream fetch failed for %s (%s); continuing",
+                        a.garmin_activity_id,
+                        exc,
+                    )
 
         progress("Building your dashboard…")
         if job is not None:

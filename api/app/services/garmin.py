@@ -104,6 +104,20 @@ class GarminConnectProvider:
             if "mfa" in str(exc).lower() or "multi-factor" in str(exc).lower():
                 raise GarminMFARequired(str(exc)) from exc
             raise GarminAuthError(str(exc)) from exc
+        except Exception as exc:  # noqa: BLE001 — garth/requests raise their own types
+            msg = str(exc).lower()
+            if "429" in msg or "too many" in msg or "rate" in msg:
+                raise GarminAccountLocked(
+                    "Garmin is rate-limiting login attempts — wait a few minutes "
+                    "and try again."
+                ) from exc
+            if "mfa" in msg or "multi-factor" in msg:
+                raise GarminMFARequired(str(exc)) from exc
+            raise GarminAuthError(
+                "Garmin rejected the login (401). Check your credentials; if the "
+                "account uses two-factor auth, or you've retried several times, "
+                "Garmin may be temporarily blocking — wait and try once."
+            ) from exc
         return client.garth.dumps()
 
     def list_activities(self, token: str, since: date) -> list[GarminActivity]:
