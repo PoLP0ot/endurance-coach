@@ -1,7 +1,9 @@
 """User profile, extends Supabase auth.users (1:1 by id)."""
 from __future__ import annotations
 
-from sqlalchemy import String
+from datetime import date
+
+from sqlalchemy import Date, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import GUID, Base, TimestampMixin
@@ -17,6 +19,9 @@ class User(Base, TimestampMixin):
     display_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     # Modular goal: marathon | weight_loss | hyrox | triathlon | health
     primary_goal: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # Goal race (north-star banner): name + date drive the dashboard countdown.
+    race_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    race_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
     onboarding_complete: Mapped[bool] = mapped_column(default=False, nullable=False)
     subscription_status: Mapped[str] = mapped_column(
         String(20), default="free", nullable=False

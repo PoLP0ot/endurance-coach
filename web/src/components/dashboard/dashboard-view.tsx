@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { MetricCard } from "./metric-card";
 import { CoachNote } from "./coach-note";
 import { TrainingLoadChart } from "./training-load-chart";
+import { GoalBanner } from "./goal-banner";
+import { WeekGlance } from "./week-glance";
 
 type Phase =
   | { kind: "loading" }
@@ -104,6 +106,7 @@ export function DashboardView() {
         )}
       </div>
       {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
+      {data.goal && <GoalBanner goal={data.goal} />}
       <CoachNote headline={data.form.headline} detail={data.form.detail} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard
@@ -130,6 +133,7 @@ export function DashboardView() {
           accentClassName="text-accent"
         />
       </div>
+      <WeekGlance data={data.this_week} />
       <TrainingLoadChart data={data.load_series} />
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">

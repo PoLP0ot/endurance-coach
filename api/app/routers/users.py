@@ -1,6 +1,7 @@
 """Current-user profile endpoints (US11a)."""
 from __future__ import annotations
 
+from datetime import date
 from typing import Literal
 
 from fastapi import APIRouter, Depends
@@ -20,6 +21,8 @@ Units = Literal["metric", "imperial"]
 class ProfileUpdate(BaseModel):
     display_name: str | None = Field(default=None, max_length=120)
     primary_goal: Goal | None = None
+    race_name: str | None = Field(default=None, max_length=120)
+    race_date: date | None = None
     units: Units | None = None
     weekly_email_opt_in: bool | None = None
 
@@ -40,6 +43,8 @@ def _serialize(user: User) -> dict:
         "email": user.email,
         "display_name": user.display_name,
         "primary_goal": user.primary_goal,
+        "race_name": user.race_name,
+        "race_date": user.race_date.isoformat() if user.race_date else None,
         "units": user.units,
         "weekly_email_opt_in": user.weekly_email_opt_in,
         "onboarding_complete": user.onboarding_complete,

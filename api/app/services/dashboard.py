@@ -7,6 +7,7 @@ computed TSB, not generated text.
 """
 from __future__ import annotations
 
+import math
 from datetime import date, timedelta
 
 from sqlalchemy import select
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models.activity import Activity
 from app.models.health import DailyHealth
+from app.models.user import User
 from app.services.analytics import (
     activity_tss,
     fitness_series,
@@ -27,13 +29,59 @@ DEFAULT_WINDOW_DAYS = 42
 RESTING_HR_BASELINE = 50
 
 
+def _activity_tss(a: Activity) -> float:
+    """TSS for one activity, preferring the stored value over the HR fallback."""
+    return a.tss if a.tss is not None else activity_tss(a.duration_s, a.avg_hr)
+
+
+def _week_summary(activities: list[Activity], start: date, end: date) -> dict:
+    """Aggregate distance/TSS/duration/count for activities in [start, end]."""
+    in_week = [a for a in activities if start <= a.start_time.date() <= end]
+    return {
+        "activity_count": len(in_week),
+        "distance_m": round(sum(a.distance_m or 0.0 for a in in_week), 1),
+        "tss": round(sum(_activity_tss(a) for a in in_week), 1),
+        "duration_s": sum(a.duration_s or 0 for a in in_week),
+    }
+
+
+def _build_goal(user: User | None, today: date, first_activity: date | None) -> dict | None:
+    """North-star race banner: countdown + progress from training start to race."""
+    if user is None or user.race_date is None:
+        return None
+    days_to_go = (user.race_date - today).days
+    weeks_to_go = max(math.ceil(days_to_go / 7), 0)
+    start = first_activity or today
+    total_days = max((user.race_date - start).days, 1)
+    done_days = min(max((today - start).days, 0), total_days)
+    progress_pct = round(done_days / total_days * 100)
+    return {
+        "race_name": user.race_name,
+        "race_date": user.race_date.isoformat(),
+        "days_to_go": days_to_go,
+        "weeks_to_go": weeks_to_go,
+        "progress_pct": progress_pct,
+        "is_past": days_to_go < 0,
+    }
+
+
+def _build_this_week(activities: list[Activity], today: date) -> dict:
+    """This-week vs last-week aggregate (ISO weeks, Monday-anchored)."""
+    monday = today - timedelta(days=today.weekday())
+    last_monday = monday - timedelta(days=7)
+    return {
+        "this_week": _week_summary(activities, monday, today),
+        "last_week": _week_summary(activities, last_monday, monday - timedelta(days=1)),
+        "week_start": monday.isoformat(),
+    }
+
+
 def _daily_tss(activities: list[Activity]) -> dict[date, float]:
     """Sum each activity's TSS into its calendar day."""
     by_day: dict[date, float] = {}
     for a in activities:
-        tss = a.tss if a.tss is not None else activity_tss(a.duration_s, a.avg_hr)
         day = a.start_time.date()
-        by_day[day] = by_day.get(day, 0.0) + tss
+        by_day[day] = by_day.get(day, 0.0) + _activity_tss(a)
     return by_day
 
 
@@ -86,6 +134,11 @@ def build_dashboard(
             sleep = float(latest_health.sleep_score)
     recovery = recovery_score(current.tsb, resting_delta, sleep)
 
+    user = db.get(User, user_id)
+    first_activity = activities[0].start_time.date() if activities else None
+    goal = _build_goal(user, today, first_activity)
+    this_week = _build_this_week(activities, today)
+
     window_activities = [a for a in activities if a.start_time.date() >= start]
     total_distance = sum(a.distance_m or 0.0 for a in window_activities)
     latest = activities[-1] if activities else None
@@ -104,6 +157,8 @@ def build_dashboard(
     )
 
     return {
+        "goal": goal,
+        "this_week": this_week,
         "fitness": {
             "ctl": round(current.ctl, 1),
             "atl": round(current.atl, 1),

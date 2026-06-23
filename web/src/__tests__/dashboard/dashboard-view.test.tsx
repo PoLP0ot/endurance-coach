@@ -14,7 +14,14 @@ vi.mock("@/components/dashboard/training-load-chart", () => ({
   TrainingLoadChart: () => <div data-testid="chart" />,
 }));
 
+const emptyWeek = { activity_count: 0, distance_m: 0, tss: 0, duration_s: 0 };
 const payload = {
+  goal: null,
+  this_week: {
+    this_week: { activity_count: 4, distance_m: 42000, tss: 240, duration_s: 14400 },
+    last_week: emptyWeek,
+    week_start: "2026-06-22",
+  },
   fitness: { ctl: 42, atl: 55, tsb: -13 },
   form: {
     band: "productive",
@@ -43,6 +50,24 @@ describe("DashboardView (US2)", () => {
     expect(screen.getByText("42")).toBeInTheDocument(); // CTL
     expect(screen.getByText("64")).toBeInTheDocument(); // recovery
     expect(screen.getByText(/12 activities/i)).toBeInTheDocument();
+  });
+
+  it("shows the goal banner and this-week table when present", async () => {
+    apiFetch.mockResolvedValueOnce({
+      ...payload,
+      goal: {
+        race_name: "Paris Marathon",
+        race_date: "2026-09-14",
+        days_to_go: 82,
+        weeks_to_go: 12,
+        progress_pct: 52,
+        is_past: false,
+      },
+    });
+    render(<DashboardView />);
+    expect(await screen.findByText("Paris Marathon")).toBeInTheDocument();
+    expect(screen.getByText(/12 weeks to go/i)).toBeInTheDocument();
+    expect(screen.getByText(/This Week at a Glance/i)).toBeInTheDocument();
   });
 
   it("renders an empty state when there is no data", async () => {

@@ -16,6 +16,8 @@ const profile = {
   email: "a@b.com",
   display_name: "Sam",
   primary_goal: "marathon",
+  race_name: null,
+  race_date: null,
   units: "metric",
   weekly_email_opt_in: true,
   onboarding_complete: true,

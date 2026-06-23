@@ -29,6 +29,19 @@ const fakeSession = {
 /** API fixtures keyed by request path (pathname only). */
 const API_FIXTURES: Record<string, unknown> = {
   "/dashboard": {
+    goal: {
+      race_name: "Paris Marathon",
+      race_date: "2026-09-14",
+      days_to_go: 82,
+      weeks_to_go: 12,
+      progress_pct: 52,
+      is_past: false,
+    },
+    this_week: {
+      this_week: { activity_count: 4, distance_m: 48200, tss: 287, duration_s: 16800 },
+      last_week: { activity_count: 5, distance_m: 52100, tss: 312, duration_s: 18600 },
+      week_start: "2026-06-22",
+    },
     fitness: { ctl: 62, atl: 71, tsb: -9 },
     form: {
       band: "Productive",
@@ -107,6 +120,8 @@ const API_FIXTURES: Record<string, unknown> = {
     email: "marc@example.com",
     display_name: "Marc",
     primary_goal: "marathon",
+    race_name: "Paris Marathon",
+    race_date: "2026-09-14",
     units: "metric",
     weekly_email_opt_in: true,
     onboarding_complete: true,

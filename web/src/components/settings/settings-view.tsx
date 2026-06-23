@@ -54,6 +54,8 @@ export function SettingsView() {
         body: JSON.stringify({
           display_name: profile.display_name,
           primary_goal: profile.primary_goal,
+          race_name: profile.race_name || null,
+          race_date: profile.race_date || null,
           units: profile.units,
           weekly_email_opt_in: profile.weekly_email_opt_in,
         }),
@@ -99,6 +101,24 @@ export function SettingsView() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="race_name">Goal race</Label>
+          <Input
+            id="race_name"
+            placeholder="e.g. Paris Marathon"
+            value={profile.race_name ?? ""}
+            onChange={(e) => patch({ race_name: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="race_date">Race date</Label>
+          <Input
+            id="race_date"
+            type="date"
+            value={profile.race_date ?? ""}
+            onChange={(e) => patch({ race_date: e.target.value || null })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="units">Units</Label>
