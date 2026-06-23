@@ -8,7 +8,7 @@
 
 ## 🔴 Palier 0 — core product
 
-- [ ] 0.3 Rewrite `garmin.py list_daily_health` to real garminconnect 0.2.25 methods (sleep/RHR/HRV/body-battery/stress/weight) → health_days > 0 on real import; recovery uses real signals
+- [x] 0.3 Rewrite `list_daily_health` (per-day get_stats/get_sleep_data/get_hrv_data, 28-day window, -1 sentinel cleaned) + fix `_client_from_token` to restore display_name (else usersummary 403s). VERIFIED on real account: RHR/sleep/HRV/steps/body-battery/stress now stored.
 - [ ] 0.4 Fix `get_activity_streams` to a real method → streams stored; unblocks activity map/HR chart/laps
 - [ ] 0.1a Add `POST /garmin/sync` UI trigger ("Sync now" button in Settings + garmin status block) wired to existing endpoint
 - [ ] 0.1b Add ARQ cron (`cron_jobs` in WorkerSettings) for periodic Garmin sync + the weekly-email fan-out (currently never scheduled)

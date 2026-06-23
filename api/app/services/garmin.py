@@ -5,9 +5,14 @@ official Garmin API later without touching callers.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Protocol
+
+# Daily health is fetched one day at a time, so cap the look-back to keep the
+# number of Garmin calls (and rate-limit risk) bounded.
+HEALTH_WINDOW_DAYS = 28
 
 
 class GarminError(Exception):
@@ -129,10 +134,28 @@ class GarminConnectProvider:
     def list_daily_health(
         self, token: str, since: date
     ) -> list[GarminDailyHealth]:
+        """Fetch per-day health snapshots (garminconnect is per-day, not range)."""
         client = self._client_from_token(token)
         today = date.today()
-        raw = client.get_daily_stats(since.isoformat(), today.isoformat())
-        return [self._normalize_health(h) for h in raw]
+        start = max(since, today - timedelta(days=HEALTH_WINDOW_DAYS))
+        out: list[GarminDailyHealth] = []
+        day = start
+        while day <= today:
+            iso = day.isoformat()
+            stats = self._safe(lambda d=iso: client.get_stats(d)) or {}
+            sleep = self._safe(lambda d=iso: client.get_sleep_data(d)) or {}
+            hrv = self._safe(lambda d=iso: client.get_hrv_data(d)) or {}
+            out.append(self._normalize_health(iso, stats, sleep, hrv))
+            day += timedelta(days=1)
+        return out
+
+    @staticmethod
+    def _safe(fn: Callable[[], object]) -> object | None:
+        """Call a Garmin endpoint, swallowing per-day failures (best-effort)."""
+        try:
+            return fn()
+        except Exception:  # noqa: BLE001 — one bad day shouldn't sink the import
+            return None
 
     def get_activity_streams(self, token: str, garmin_activity_id: str) -> dict:
         client = self._client_from_token(token)
@@ -144,6 +167,11 @@ class GarminConnectProvider:
 
         client = Garmin()
         client.garth.loads(token)
+        # login() normally sets these from the profile; restore them when we load
+        # from a stored token, else usersummary URLs resolve to .../daily/None.
+        profile = getattr(client.garth, "profile", None) or {}
+        client.display_name = profile.get("displayName")
+        client.full_name = profile.get("fullName")
         return client
 
     @staticmethod
@@ -162,14 +190,30 @@ class GarminConnectProvider:
         )
 
     @staticmethod
-    def _normalize_health(h: dict) -> GarminDailyHealth:
+    def _normalize_health(
+        iso: str, stats: dict, sleep: dict, hrv: dict
+    ) -> GarminDailyHealth:
+        """Pull health fields defensively from the per-day Garmin payloads."""
+        sleep_dto = (sleep or {}).get("dailySleepDTO") or {}
+        sleep_scores = sleep_dto.get("sleepScores") or {}
+        sleep_overall = sleep_scores.get("overall") or {}
+        hrv_summary = (hrv or {}).get("hrvSummary") or {}
+        weight_g = stats.get("weight")
+
+        def clean(v: object) -> object | None:
+            """Garmin uses -1 as a 'no data' sentinel for several fields."""
+            return None if isinstance(v, (int, float)) and v < 0 else v
+
         return GarminDailyHealth(
-            day=h.get("calendarDate", ""),
-            resting_hr=h.get("restingHeartRate"),
-            hrv=h.get("hrvWeeklyAverage"),
-            sleep_score=h.get("sleepScore"),
-            steps=h.get("totalSteps"),
-            body_battery=h.get("bodyBatteryMostRecentValue"),
-            stress_avg=h.get("averageStressLevel"),
-            weight_kg=(h["weight"] / 1000.0) if h.get("weight") is not None else None,
+            day=iso,
+            resting_hr=clean(stats.get("restingHeartRate")),
+            hrv=hrv_summary.get("lastNightAvg") or hrv_summary.get("weeklyAvg"),
+            sleep_score=sleep_overall.get("value"),
+            steps=clean(stats.get("totalSteps")),
+            body_battery=clean(
+                stats.get("bodyBatteryMostRecentValue")
+                or stats.get("bodyBatteryHighestValue")
+            ),
+            stress_avg=clean(stats.get("averageStressLevel")),
+            weight_kg=(weight_g / 1000.0) if weight_g is not None else None,
         )
