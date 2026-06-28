@@ -6,7 +6,7 @@ from datetime import date
 from sqlalchemy import Date, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import GUID, Base, TimestampMixin
+from app.models.base import GUID, Base, JSONType, TimestampMixin
 
 
 class User(Base, TimestampMixin):
@@ -22,6 +22,10 @@ class User(Base, TimestampMixin):
     # Goal race (north-star banner): name + date drive the dashboard countdown.
     race_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     race_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
+    # Structured, per-goal target params (target weight, race distance/time,
+    # equipment, weekly-activity target, baseline snapshot). Shape varies by
+    # primary_goal; validated by app.schemas.goal_params.
+    goal_params: Mapped[dict | None] = mapped_column(JSONType, nullable=True)
     onboarding_complete: Mapped[bool] = mapped_column(default=False, nullable=False)
     subscription_status: Mapped[str] = mapped_column(
         String(20), default="free", nullable=False
