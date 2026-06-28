@@ -17,6 +17,22 @@ vi.mock("@/components/dashboard/training-load-chart", () => ({
 const emptyWeek = { activity_count: 0, distance_m: 0, tss: 0, duration_s: 0 };
 const payload = {
   goal: null,
+  goal_structured: {
+    kind: "marathon",
+    label: "Race time",
+    on_track_band: "on_track",
+    headline: "Projected finish 3:28:00",
+    projection: "3:28:00",
+    target: "3:30:00",
+    eta: null,
+  },
+  goal_variant: {
+    kind: "marathon",
+    panels: [
+      { label: "Fitness", value: 62, unit: "CTL", hint: "42-day load" },
+      { label: "Form", value: -9, unit: "TSB", hint: "balance" },
+    ],
+  },
   this_week: {
     this_week: { activity_count: 4, distance_m: 42000, tss: 240, duration_s: 14400 },
     last_week: emptyWeek,
@@ -51,6 +67,14 @@ describe("DashboardView (US2)", () => {
     expect(screen.getByText("42")).toBeInTheDocument(); // CTL
     expect(screen.getByText("64")).toBeInTheDocument(); // recovery
     expect(screen.getByText(/12 activities/i)).toBeInTheDocument();
+  });
+
+  it("renders the goal progress band and goal-specific panels", async () => {
+    apiFetch.mockResolvedValueOnce(payload);
+    render(<DashboardView />);
+    expect(await screen.findByText("On track")).toBeInTheDocument();
+    expect(screen.getByText(/Projected finish 3:28:00/i)).toBeInTheDocument();
+    expect(screen.getByText(/Race readiness/i)).toBeInTheDocument();
   });
 
   it("shows the goal banner and this-week table when present", async () => {

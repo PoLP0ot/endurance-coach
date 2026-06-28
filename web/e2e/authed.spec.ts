@@ -28,6 +28,28 @@ const fakeSession = {
 
 /** API fixtures keyed by request path (pathname only). */
 const API_FIXTURES: Record<string, unknown> = {
+  "/coach/today": {
+    status: "ok",
+    date: "2026-06-24",
+    week: 6,
+    phase: "build",
+    session: {
+      day_index: 2,
+      kind: "interval",
+      prescription: "Intervals 6×1 km @ threshold",
+      target_tss: 70,
+    },
+    is_rest: false,
+    adherence: {
+      adherence_pct: 80,
+      completed: 4,
+      partial: 0,
+      missed: 1,
+      extras: 0,
+    },
+    goal_band: "on_track",
+    headline: "Projected finish 3:28:00",
+  },
   "/dashboard": {
     goal: {
       race_name: "Paris Marathon",
@@ -36,6 +58,23 @@ const API_FIXTURES: Record<string, unknown> = {
       weeks_to_go: 12,
       progress_pct: 52,
       is_past: false,
+    },
+    goal_structured: {
+      kind: "marathon",
+      label: "Race time",
+      on_track_band: "on_track",
+      headline: "Projected finish 3:28:00 — on track for Paris.",
+      projection: "3:28:00",
+      target: "3:30:00",
+      eta: "2026-09-14",
+    },
+    goal_variant: {
+      kind: "marathon",
+      panels: [
+        { label: "Fitness", value: 62, unit: "CTL", hint: "42-day load" },
+        { label: "Form", value: -9, unit: "TSB", hint: "balance" },
+        { label: "Threshold pace", value: "4:24/km", unit: "", hint: "best recent run" },
+      ],
     },
     this_week: {
       this_week: { activity_count: 4, distance_m: 48200, tss: 287, duration_s: 16800 },

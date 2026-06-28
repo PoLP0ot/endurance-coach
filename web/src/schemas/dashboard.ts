@@ -51,8 +51,35 @@ export const healthSchema = z.object({
   feature: z.string(),
 });
 
+export const goalPanelSchema = z.object({
+  label: z.string(),
+  value: z.union([z.string(), z.number()]),
+  unit: z.string(),
+  hint: z.string(),
+});
+
+export const goalVariantSchema = z.object({
+  kind: z.string(),
+  panels: z.array(goalPanelSchema),
+});
+
+export const goalProgressSchema = z
+  .object({
+    kind: z.string(),
+    on_track_band: z.string(),
+    headline: z.string(),
+    eta: z.string().nullable().optional(),
+    label: z.string().optional(),
+    projection: z.string().nullable().optional(),
+    target: z.union([z.string(), z.number()]).nullable().optional(),
+    current: z.union([z.string(), z.number()]).nullable().optional(),
+  })
+  .passthrough();
+
 export const dashboardSchema = z.object({
   goal: goalSchema.nullable(),
+  goal_structured: goalProgressSchema,
+  goal_variant: goalVariantSchema,
   this_week: thisWeekSchema,
   health: healthSchema.nullable(),
   fitness: z.object({ ctl: z.number(), atl: z.number(), tsb: z.number() }),
@@ -72,3 +99,6 @@ export type LoadPoint = z.infer<typeof loadPointSchema>;
 export type Goal = z.infer<typeof goalSchema>;
 export type ThisWeek = z.infer<typeof thisWeekSchema>;
 export type Health = z.infer<typeof healthSchema>;
+export type GoalProgress = z.infer<typeof goalProgressSchema>;
+export type GoalVariant = z.infer<typeof goalVariantSchema>;
+export type GoalPanel = z.infer<typeof goalPanelSchema>;

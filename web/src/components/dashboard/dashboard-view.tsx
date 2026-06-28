@@ -16,8 +16,11 @@ import { MetricCard } from "./metric-card";
 import { CoachNote } from "./coach-note";
 import { TrainingLoadChart } from "./training-load-chart";
 import { GoalBanner } from "./goal-banner";
+import { GoalProgressBanner } from "./goal-progress-banner";
+import { GoalVariantPanels } from "./goal-variant-panels";
 import { WeekGlance } from "./week-glance";
 import { BodyCard } from "./body-card";
+import { TodayCard } from "@/components/coach/today-card";
 
 type Phase =
   | { kind: "loading" }
@@ -108,6 +111,8 @@ export function DashboardView() {
       </div>
       {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
       {data.goal && <GoalBanner goal={data.goal} />}
+      <GoalProgressBanner progress={data.goal_structured} />
+      <TodayCard />
       <CoachNote headline={data.form.headline} detail={data.form.detail} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard
@@ -134,6 +139,7 @@ export function DashboardView() {
           accentClassName="text-accent"
         />
       </div>
+      <GoalVariantPanels variant={data.goal_variant} />
       <WeekGlance data={data.this_week} />
       {data.health && <BodyCard health={data.health} />}
       <TrainingLoadChart data={data.load_series} />
