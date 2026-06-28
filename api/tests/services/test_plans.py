@@ -40,6 +40,22 @@ def test_taper_sheds_load_into_race_week():
     assert taper[-1]["target_tss"] < taper[0]["target_tss"]
 
 
+def test_weeks_carry_day_level_sessions():
+    weeks = _weeks("marathon", 12, date(2026, 7, 1), 50)
+    for w in weeks:
+        assert w["sessions"]  # each week has prescribed sessions
+        assert all("prescription" in s and "day_index" in s for s in w["sessions"])
+    # Sessions sum back near the weekly target.
+    w = weeks[3]
+    assert abs(sum(s["target_tss"] for s in w["sessions"]) - w["target_tss"]) < 1.0
+
+
+def test_session_shapes_differ_by_goal():
+    marathon = _weeks("marathon", 8, date(2026, 7, 1), 50)[1]["sessions"]
+    weight = _weeks("weight_loss", 8, date(2026, 7, 1), 50)[1]["sessions"]
+    assert {s["kind"] for s in marathon} != {s["kind"] for s in weight}
+
+
 def test_weeks_carry_dates_and_goal_focus():
     weeks = _weeks("hyrox", 8, date(2026, 7, 6), 30)
     assert weeks[0]["start_date"] == "2026-07-06"

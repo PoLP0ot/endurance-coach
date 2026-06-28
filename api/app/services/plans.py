@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.plan import PLAN_ACTIVE, PLAN_ARCHIVED, TrainingPlan
+from app.services.goals import get_goal_definition
 
 # Weekly load ≈ CTL × 7; we ramp from this baseline.
 WEEKLY_TSS_PER_CTL = 7.0
@@ -114,6 +115,15 @@ def build_plan_structure(
                 "focus": focus[phase],
             }
         )
+
+    # Day-level sessions per week from the goal's microcycle (Phase C1).
+    definition = get_goal_definition(goal)
+    for week in plan_weeks:
+        week["sessions"] = [
+            session
+            for day in range(7)
+            if (session := definition.daily_session_template(week, day)) is not None
+        ]
 
     return {"goal": goal, "weeks": plan_weeks}
 
