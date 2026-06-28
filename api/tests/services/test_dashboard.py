@@ -92,6 +92,56 @@ def test_build_dashboard_health_snapshot(db_session, seed_user):
     assert data["health"]["feature"] in {"hrv", "steps", "weight_kg", "body_battery"}
 
 
+def test_dashboard_includes_goal_structured_and_variant(db_session, seed_user):
+    today = date(2026, 6, 22)
+    base = datetime(2026, 6, 1, 7, 0, tzinfo=UTC)
+    for i in range(10):
+        db_session.add(
+            Activity(
+                user_id=seed_user.id,
+                garmin_activity_id=f"run-{i}",
+                activity_type="running",
+                start_time=base + timedelta(days=i),
+                duration_s=3600,
+                distance_m=14000.0,
+                avg_hr=150,
+            )
+        )
+    seed_user.primary_goal = "marathon"
+    seed_user.goal_params = {"target_time_s": 12600, "race_distance_m": 42195.0}
+    db_session.commit()
+
+    data = build_dashboard(db_session, seed_user.id, today=today)
+    assert data["goal_structured"]["kind"] == "marathon"
+    assert data["goal_variant"]["kind"] == "marathon"
+    assert data["goal_variant"]["panels"]  # metric tiles present
+    # A projection is produced from the seeded runs.
+    assert data["goal_structured"]["projection"] is not None
+
+
+def test_dashboard_weight_loss_projection(db_session, seed_user):
+    today = date(2026, 6, 22)
+    db_session.add(_activity(seed_user.id, datetime(2026, 6, 20, 7, tzinfo=UTC)))
+    seed_user.primary_goal = "weight_loss"
+    seed_user.goal_params = {"target_weight_kg": 75.0}
+    for i in range(10):
+        db_session.add(
+            DailyHealth(
+                user_id=seed_user.id,
+                day=today - timedelta(days=9 - i),
+                weight_kg=80.0 - i * 0.15,
+            )
+        )
+    db_session.commit()
+
+    data = build_dashboard(db_session, seed_user.id, today=today)
+    prog = data["goal_structured"]
+    assert prog["kind"] == "weight_loss"
+    assert prog["current"] is not None
+    assert prog["rate_kg_per_week"] is not None and prog["rate_kg_per_week"] < 0
+    assert prog["eta"] is not None  # losing toward target → has an ETA
+
+
 def test_build_dashboard_isolates_users(db_session, seed_user):
     today = date(2026, 6, 22)
     when = datetime(2026, 6, 20, 7, 0, tzinfo=UTC)

@@ -22,6 +22,11 @@ from app.services.analytics import (
     form_assessment,
     recovery_score,
 )
+from app.services.goals import GoalContext, get_goal_definition
+
+# How far back the goal engine looks for recent activities and the weight trend.
+GOAL_ACTIVITY_WINDOW = 30
+WEIGHT_TREND_DAYS = 28
 
 # Window of the fitness curve shown on the dashboard.
 DEFAULT_WINDOW_DAYS = 42
@@ -122,6 +127,53 @@ def _build_this_week(activities: list[Activity], today: date) -> dict:
     }
 
 
+def _build_goal_context(
+    db: Session,
+    user: User | None,
+    activities: list[Activity],
+    fitness: dict,
+    recovery: int,
+    health: dict | None,
+    today: date,
+) -> GoalContext:
+    """Assemble the DB-free context the goal definitions read."""
+    recent = [
+        {
+            "date": a.start_time.isoformat(),
+            "activity_type": a.activity_type,
+            "distance_m": a.distance_m,
+            "duration_s": a.duration_s,
+            "avg_hr": a.avg_hr,
+            "tss": round(_activity_tss(a), 1),
+        }
+        for a in reversed(activities[-GOAL_ACTIVITY_WINDOW:])
+    ]
+    weight_start = today - timedelta(days=WEIGHT_TREND_DAYS)
+    weight_rows = db.execute(
+        select(DailyHealth)
+        .where(
+            DailyHealth.user_id == (user.id if user else ""),
+            DailyHealth.day >= weight_start,
+            DailyHealth.day <= today,
+        )
+        .order_by(DailyHealth.day)
+    ).scalars()
+    weight_series = [
+        {"day": r.day.isoformat(), "kg": r.weight_kg}
+        for r in weight_rows
+        if r.weight_kg is not None
+    ]
+    return GoalContext(
+        today=today,
+        goal_params=(user.goal_params or {}) if user else {},
+        fitness=fitness,
+        recovery=recovery,
+        health=health,
+        recent_activities=recent,
+        weight_series=weight_series,
+    )
+
+
 def _daily_tss(activities: list[Activity]) -> dict[date, float]:
     """Sum each activity's TSS into its calendar day."""
     by_day: dict[date, float] = {}
@@ -186,6 +238,16 @@ def build_dashboard(
     this_week = _build_this_week(activities, today)
     health = _build_health(db, user_id, today, user.primary_goal if user else None)
 
+    fitness = {
+        "ctl": round(current.ctl, 1),
+        "atl": round(current.atl, 1),
+        "tsb": round(current.tsb, 1),
+    }
+    goal_ctx = _build_goal_context(db, user, activities, fitness, recovery, health, today)
+    definition = get_goal_definition(user.primary_goal if user else None)
+    goal_structured = definition.progress(goal_ctx)
+    goal_variant = definition.dashboard_variant(goal_ctx)
+
     window_activities = [a for a in activities if a.start_time.date() >= start]
     total_distance = sum(a.distance_m or 0.0 for a in window_activities)
     latest = activities[-1] if activities else None
@@ -205,13 +267,11 @@ def build_dashboard(
 
     return {
         "goal": goal,
+        "goal_structured": goal_structured,
+        "goal_variant": goal_variant,
         "this_week": this_week,
         "health": health,
-        "fitness": {
-            "ctl": round(current.ctl, 1),
-            "atl": round(current.atl, 1),
-            "tsb": round(current.tsb, 1),
-        },
+        "fitness": fitness,
         "form": form_assessment(current.tsb),
         "recovery": recovery,
         "load_series": load_series,
