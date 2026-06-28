@@ -107,9 +107,11 @@ def build_signals(
     ]
 
     facts = {
+        "goal": data["goal_structured"],
         "fitness": data["fitness"],
         "form": data["form"],
         "recovery": recovery,
+        "health": data["health"],
         "totals": data["totals"],
     }
 

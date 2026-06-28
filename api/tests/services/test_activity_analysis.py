@@ -53,6 +53,27 @@ def test_facts_include_zone_distribution_from_streams():
     assert sum(facts["intensity_distribution"].values()) > 0.99
 
 
+def test_facts_zone_distribution_from_raw_garmin_streams():
+    """The real bug: streams are stored raw-Garmin, not as a flat hr list."""
+    raw = {
+        "metricDescriptors": [
+            {"metricsIndex": 0, "key": "sumElapsedDuration"},
+            {"metricsIndex": 1, "key": "directHeartRate"},
+        ],
+        "activityDetailMetrics": [
+            {"metrics": [float(t), float(120 + t)]} for t in range(40)
+        ],
+    }
+    facts = build_activity_facts(_run(), streams=raw)
+    assert "intensity_distribution" in facts
+    assert sum(facts["intensity_distribution"].values()) > 0.99
+
+
+def test_facts_include_goal_when_provided():
+    facts = build_activity_facts(_run(), streams=None, goal="marathon")
+    assert facts["goal"] == "marathon"
+
+
 def test_get_or_create_caches_and_calls_llm_once(db_session, seed_user):
     from tests.conftest import TEST_USER_ID
 

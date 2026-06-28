@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.chat import ROLE_ASSISTANT, ROLE_USER, ChatMessage
-from app.services.dashboard import build_dashboard
+from app.services.coach_facts import build_coach_facts
 
 HISTORY_LIMIT = 20
 CHAT_INSTRUCTION = (
@@ -40,14 +40,8 @@ def history(db: Session, user_id: str, limit: int = HISTORY_LIMIT) -> list[ChatM
 
 
 def _chat_facts(db: Session, user_id: str, today: date) -> dict:
-    """Compact deterministic context for the coach."""
-    data = build_dashboard(db, user_id, today=today)
-    return {
-        "fitness": data["fitness"],
-        "form": data["form"],
-        "recovery": data["recovery"],
-        "totals": data["totals"],
-    }
+    """Goal-aware deterministic context for the coach (goal, projection, trend)."""
+    return build_coach_facts(db, user_id, today)
 
 
 def answer(

@@ -107,9 +107,11 @@ def build_weekly_email(
 
     data = build_dashboard(db, user.id, today=today)
     facts = {
+        "goal": data["goal_structured"],
         "fitness": data["fitness"],
         "form": data["form"],
         "recovery": data["recovery"],
+        "health": data["health"],
         "totals": data["totals"],
     }
     narrative = llm.narrate(Task.ANALYSIS, facts, WEEKLY_INSTRUCTION)

@@ -92,7 +92,7 @@ async def get_activity_analysis(
     activity = db.get(Activity, activity_id)
     if activity is None or activity.user_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "activity_not_found")
-    analysis = get_or_create_analysis(db, activity, llm)
+    analysis = get_or_create_analysis(db, activity, llm, goal=user.primary_goal)
     return {
         "activity_id": activity.id,
         "model": analysis.model,

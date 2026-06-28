@@ -13,11 +13,13 @@ from sqlalchemy.orm import Session
 from app.models.activity import Activity, ActivityMetric
 from app.models.analysis import AIAnalysis
 from app.services.analytics import activity_tss, intensity_distribution
+from app.services.streams import normalize_streams
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 ANALYSIS_INSTRUCTION = (
     "Explain what this single activity means for the athlete: the type of "
-    "stimulus, how hard it was, and one concrete takeaway. Two short paragraphs."
+    "stimulus, how hard it was, and one concrete takeaway. Tie it to their goal "
+    "when one is given. Two short paragraphs."
 )
 # Default max HR when the activity carries none (used only to derive zones).
 DEFAULT_MAX_HR = 190
@@ -40,16 +42,36 @@ def _pace_per_km(duration_s: int | None, distance_m: float | None) -> str | None
     return f"{minutes}:{seconds:02d}"
 
 
-def build_activity_facts(activity: Activity, streams: dict | None) -> dict:
+def _hr_samples(streams: dict | None) -> list[int]:
+    """Heart-rate samples from raw Garmin streams, or [] when unavailable.
+
+    Streams are stored in Garmin's raw column-indexed format; ``normalize_streams``
+    parses them into flat samples. (The legacy ``{"hr": [...]}`` shape is still
+    accepted for tests and any pre-normalised data.)
+    """
+    if not streams:
+        return []
+    if isinstance(streams.get("hr"), list):
+        return [int(h) for h in streams["hr"] if h is not None]
+    normalized = normalize_streams(streams)
+    if not normalized:
+        return []
+    return [int(s["hr"]) for s in normalized["samples"] if s.get("hr") is not None]
+
+
+def build_activity_facts(
+    activity: Activity, streams: dict | None, goal: str | None = None
+) -> dict:
     """Build the deterministic fact sheet handed to the LLM.
 
-    Includes summary metrics, derived pace and TSS, and an HR-zone distribution
-    when a stream is available. Pure and JSON-serialisable.
+    Includes summary metrics, derived pace and TSS, the athlete's goal, and an
+    HR-zone distribution when a stream is available. Pure and JSON-serialisable.
     """
     tss = activity.tss if activity.tss is not None else round(
         activity_tss(activity.duration_s, activity.avg_hr), 1
     )
     facts: dict = {
+        "goal": goal,
         "activity_type": activity.activity_type,
         "name": activity.name,
         "distance_km": round((activity.distance_m or 0.0) / 1000.0, 2),
@@ -60,12 +82,13 @@ def build_activity_facts(activity: Activity, streams: dict | None) -> dict:
         "elevation_gain_m": activity.elevation_gain_m,
         "tss": tss,
     }
-    if streams and isinstance(streams.get("hr"), list) and streams["hr"]:
-        ceiling = activity.max_hr or DEFAULT_MAX_HR
+    hr_samples = _hr_samples(streams)
+    if hr_samples:
+        ceiling = activity.max_hr or max(hr_samples) or DEFAULT_MAX_HR
         bounds = [int(ceiling * f) for f in (0.6, 0.7, 0.8, 0.9)]
         facts["intensity_distribution"] = {
             z: round(frac, 3)
-            for z, frac in intensity_distribution(streams["hr"], bounds).items()
+            for z, frac in intensity_distribution(hr_samples, bounds).items()
         }
     return facts
 
@@ -84,6 +107,7 @@ def get_or_create_analysis(
     db: Session,
     activity: Activity,
     llm: _Narrator,
+    goal: str | None = None,
     prompt_version: str = PROMPT_VERSION,
 ) -> AIAnalysis:
     """Return the cached analysis for an activity, generating it on first ask."""
@@ -98,7 +122,7 @@ def get_or_create_analysis(
     if existing is not None:
         return existing
 
-    facts = build_activity_facts(activity, _stream_for(db, activity.id))
+    facts = build_activity_facts(activity, _stream_for(db, activity.id), goal)
     narrative = llm.narrate(Task.ANALYSIS, facts, ANALYSIS_INSTRUCTION)
     analysis = AIAnalysis(
         activity_id=activity.id,
