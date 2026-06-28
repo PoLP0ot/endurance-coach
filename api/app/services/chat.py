@@ -11,6 +11,7 @@ from typing import Protocol
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.chat import ROLE_ASSISTANT, ROLE_USER, ChatMessage
 from app.services.coach_facts import build_coach_facts
 
@@ -64,7 +65,18 @@ def answer(
         f"{CHAT_INSTRUCTION}\n\nConversation so far:\n{transcript}\n\n"
         f"Latest message:\n{message}"
     )
-    reply_text = llm.narrate(Task.CHAT, facts, instruction)
+    if settings.coach_tools_enabled and hasattr(llm, "converse"):
+        from app.services.coach_tools import TOOL_SPECS, run_tool
+
+        reply_text = llm.converse(
+            Task.CHAT,
+            facts,
+            instruction,
+            TOOL_SPECS,
+            lambda name, args: run_tool(db, user_id, today, name, args),
+        )
+    else:
+        reply_text = llm.narrate(Task.CHAT, facts, instruction)
 
     reply = ChatMessage(user_id=user_id, role=ROLE_ASSISTANT, content=reply_text)
     db.add(reply)

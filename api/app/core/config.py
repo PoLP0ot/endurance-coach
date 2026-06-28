@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     llm_model_chat: str = "gpt-4o-mini"
     llm_model_plan: str = "gpt-4o"
+    # When on, the coach chat can call tools to pull deterministic facts.
+    coach_tools_enabled: bool = True
 
     # Queue / Email / Payments
     redis_url: str = "redis://localhost:6379"
