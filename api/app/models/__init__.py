@@ -3,6 +3,7 @@ from app.models.activity import Activity, ActivityMetric
 from app.models.analysis import AIAnalysis
 from app.models.audit import GdprAuditLog
 from app.models.base import Base
+from app.models.brief import DailyBrief
 from app.models.chat import ChatMessage
 from app.models.garmin import GarminConnection
 from app.models.health import DailyHealth
@@ -24,4 +25,5 @@ __all__ = [
     "TrainingPlan",
     "Subscription",
     "GdprAuditLog",
+    "DailyBrief",
 ]

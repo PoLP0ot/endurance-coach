@@ -17,6 +17,7 @@ from app.models.import_job import JOB_QUEUED, ImportJob
 from app.models.plan import PLAN_ACTIVE, TrainingPlan
 from app.models.user import User
 from app.services.adaptation import adapt_plan
+from app.services.brief import get_or_create_brief
 from app.services.coach_facts import build_coach_facts
 from app.services.email import EmailProvider, build_weekly_email
 from app.services.garmin import GarminConnectProvider
@@ -137,6 +138,34 @@ async def adapt_all_plans(ctx: dict) -> dict:
         db.close()
 
 
+async def generate_daily_brief(ctx: dict, user_id: str) -> dict:
+    """Generate (and cache) one premium user's daily brief."""
+    db = SessionLocal()
+    try:
+        user = db.get(User, user_id)
+        if user is None or not is_premium(user):
+            return {"user_id": user_id, "generated": False, "reason": "skipped"}
+        brief = get_or_create_brief(db, user_id, LLMProvider(), date.today())
+        return {"user_id": user_id, "generated": True, "brief_id": brief.id}
+    finally:
+        db.close()
+
+
+async def generate_daily_briefs(ctx: dict) -> dict:
+    """Fan out daily-brief generation to all premium users (scheduled)."""
+    db = SessionLocal()
+    try:
+        users = db.query(User).all()
+        queued = 0
+        for user in users:
+            if is_premium(user):
+                await ctx["redis"].enqueue_job("generate_daily_brief", user.id)
+                queued += 1
+        return {"queued": queued}
+    finally:
+        db.close()
+
+
 class WorkerSettings:
     """ARQ worker configuration. Run with: arq app.jobs.worker.WorkerSettings"""
 
@@ -146,9 +175,12 @@ class WorkerSettings:
         send_weekly_emails,
         sync_all_garmin,
         adapt_all_plans,
+        generate_daily_brief,
+        generate_daily_briefs,
     ]
     cron_jobs = [
         cron(sync_all_garmin, hour=3, minute=0),  # daily Garmin re-sync 03:00
+        cron(generate_daily_briefs, hour=5, minute=30),  # daily brief 05:30
         cron(send_weekly_emails, weekday="mon", hour=7, minute=0),  # Mon 07:00
         cron(adapt_all_plans, weekday="sun", hour=18, minute=0),  # weekly adaptation
     ]
