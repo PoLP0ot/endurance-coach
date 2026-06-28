@@ -7,18 +7,23 @@ from __future__ import annotations
 from datetime import date
 
 from arq import cron
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.core.security import decrypt
 from app.models.garmin import GarminConnection
 from app.models.import_job import JOB_QUEUED, ImportJob
+from app.models.plan import PLAN_ACTIVE, TrainingPlan
 from app.models.user import User
+from app.services.adaptation import adapt_plan
+from app.services.coach_facts import build_coach_facts
 from app.services.email import EmailProvider, build_weekly_email
 from app.services.garmin import GarminConnectProvider
 from app.services.garmin_import import resolve_since, run_import
 from app.services.llm import LLMProvider
 from app.services.subscriptions import is_premium
+from app.services.today import todays_session
 
 
 async def import_garmin_activities(
@@ -109,6 +114,29 @@ async def sync_all_garmin(ctx: dict) -> dict:
         db.close()
 
 
+async def adapt_all_plans(ctx: dict) -> dict:
+    """Scheduled: re-seed every active plan's upcoming weeks from real fitness."""
+    db = SessionLocal()
+    try:
+        plans = db.query(TrainingPlan).filter_by(status=PLAN_ACTIVE).all()
+        adapted = 0
+        for plan in plans:
+            facts = build_coach_facts(db, plan.user_id, date.today())
+            today_info = todays_session(db, plan.user_id, date.today())
+            adherence_pct = (today_info.get("adherence") or {}).get("adherence_pct")
+            summary = adapt_plan(
+                plan.structure, facts["fitness"]["ctl"], adherence_pct, date.today()
+            )
+            flag_modified(plan, "structure")
+            db.add(plan)
+            db.commit()
+            if summary["changed_weeks"]:
+                adapted += 1
+        return {"plans": len(plans), "adapted": adapted}
+    finally:
+        db.close()
+
+
 class WorkerSettings:
     """ARQ worker configuration. Run with: arq app.jobs.worker.WorkerSettings"""
 
@@ -117,9 +145,11 @@ class WorkerSettings:
         send_weekly_email,
         send_weekly_emails,
         sync_all_garmin,
+        adapt_all_plans,
     ]
     cron_jobs = [
         cron(sync_all_garmin, hour=3, minute=0),  # daily Garmin re-sync 03:00
         cron(send_weekly_emails, weekday="mon", hour=7, minute=0),  # Mon 07:00
+        cron(adapt_all_plans, weekday="sun", hour=18, minute=0),  # weekly adaptation
     ]
     redis_settings = settings.redis_url

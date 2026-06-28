@@ -19,6 +19,7 @@ from app.core.logging import configure_logging
 from app.routers import (
     activities,
     chat,
+    coach,
     dashboard,
     email,
     garmin,
@@ -128,6 +129,7 @@ def create_app() -> FastAPI:
     app.include_router(garmin.router)
     app.include_router(dashboard.router)
     app.include_router(signals.router)
+    app.include_router(coach.router)
     app.include_router(activities.router)
     app.include_router(chat.router)
     app.include_router(plans.router)
