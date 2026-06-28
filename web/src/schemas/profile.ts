@@ -7,6 +7,7 @@ export const profileSchema = z.object({
   primary_goal: z.string().nullable(),
   race_name: z.string().nullable(),
   race_date: z.string().nullable(),
+  goal_params: z.record(z.unknown()).nullable(),
   units: z.enum(["metric", "imperial"]),
   weekly_email_opt_in: z.boolean(),
   onboarding_complete: z.boolean(),

@@ -50,3 +50,27 @@ def test_patch_me_rejects_invalid_goal(app_client, seed_user):
 
 def test_patch_me_rejects_invalid_units(app_client, seed_user):
     assert app_client.patch("/profile", json={"units": "furlongs"}).status_code == 422
+
+
+def test_patch_me_stores_goal_params(app_client, db_session, seed_user):
+    res = app_client.patch(
+        "/profile",
+        json={
+            "primary_goal": "weight_loss",
+            "goal_params": {"target_weight_kg": 74.5, "weekly_activity_target": 4},
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["goal_params"]["target_weight_kg"] == 74.5
+    user = db_session.get(User, TEST_USER_ID)
+    assert user.goal_params["weekly_activity_target"] == 4
+
+
+def test_patch_me_rejects_goal_params_wrong_shape(app_client, seed_user):
+    # weight key is invalid for a health goal → 422.
+    res = app_client.patch(
+        "/profile",
+        json={"primary_goal": "health", "goal_params": {"target_weight_kg": 74.0}},
+    )
+    assert res.status_code == 422

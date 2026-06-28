@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Msg {
   id: number;
@@ -21,6 +22,46 @@ const GOAL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "health", label: "General health" },
   { value: "unsure", label: "Not sure yet" },
 ];
+
+/** Per-goal follow-up: a quick chip choice or a single number, → goal_params. */
+type MetaChip = { label: string; params: Record<string, unknown> };
+interface GoalMeta {
+  prompt: string;
+  kind: "chips" | "number";
+  chips?: MetaChip[];
+  inputKey?: string;
+  inputLabel?: string;
+  inputUnit?: string;
+}
+
+const GOAL_META: Record<string, GoalMeta> = {
+  marathon: {
+    prompt: "What finish time are you chasing?",
+    kind: "chips",
+    chips: [
+      { label: "Sub-3:30", params: { target_time_s: 12600 } },
+      { label: "Sub-4:00", params: { target_time_s: 14400 } },
+      { label: "Sub-4:30", params: { target_time_s: 16200 } },
+      { label: "Just finish", params: {} },
+    ],
+  },
+  weight_loss: {
+    prompt: "What's your target weight?",
+    kind: "number",
+    inputKey: "target_weight_kg",
+    inputLabel: "Target weight",
+    inputUnit: "kg",
+  },
+  health: {
+    prompt: "How many active days per week are you aiming for?",
+    kind: "chips",
+    chips: [
+      { label: "3 days", params: { weekly_activity_target: 3 } },
+      { label: "4 days", params: { weekly_activity_target: 4 } },
+      { label: "5 days", params: { weekly_activity_target: 5 } },
+    ],
+  },
+};
 
 const FOLLOW_UP: Record<string, string> = {
   marathon:
@@ -48,32 +89,55 @@ export function CoachOnboard() {
         "I've pulled in your recent training from Garmin. Before I start coaching, tell me — what are you training for right now?",
     },
   ]);
-  const [step, setStep] = useState<"asking" | "typing" | "done">("asking");
+  const [step, setStep] = useState<"asking" | "meta" | "done">("asking");
+  const [goal, setGoal] = useState<string | null>(null);
+  const [numberDraft, setNumberDraft] = useState("");
 
-  const choose = async (option: { value: string; label: string }) => {
-    setMessages((prev) => [
-      ...prev,
-      { id: prev.length + 1, role: "user", content: option.label },
-    ]);
-    setStep("typing");
+  const say = (role: Msg["role"], content: string) =>
+    setMessages((prev) => [...prev, { id: prev.length + 1, role, content }]);
 
-    // Persist the goal (best-effort; the coach continues regardless).
+  const patchProfile = async (body: Record<string, unknown>) => {
     try {
       const token = await getAccessToken();
       await apiFetch("/profile", {
         method: "PATCH",
         token,
-        body: JSON.stringify({ primary_goal: option.value }),
+        body: JSON.stringify(body),
       });
     } catch {
-      // ignore — onboarding still proceeds
+      // best-effort — onboarding still proceeds
     }
+  };
 
-    setMessages((prev) => [
-      ...prev,
-      { id: prev.length + 1, role: "coach", content: FOLLOW_UP[option.value] },
-    ]);
+  const choose = async (option: { value: string; label: string }) => {
+    say("user", option.label);
+    setGoal(option.value);
+    await patchProfile({ primary_goal: option.value });
+    say("coach", FOLLOW_UP[option.value]);
+    if (GOAL_META[option.value]) {
+      say("coach", GOAL_META[option.value].prompt);
+      setStep("meta");
+    } else {
+      setStep("done");
+    }
+  };
+
+  const answerMeta = async (label: string, params: Record<string, unknown>) => {
+    say("user", label);
+    if (goal && Object.keys(params).length > 0) {
+      await patchProfile({ primary_goal: goal, goal_params: params });
+    }
+    say("coach", "Got it — that gives me a target to coach you toward.");
     setStep("done");
+  };
+
+  const submitNumber = async () => {
+    const meta = goal ? GOAL_META[goal] : undefined;
+    const value = Number(numberDraft);
+    if (!meta?.inputKey || !numberDraft || Number.isNaN(value)) return;
+    await answerMeta(`${numberDraft} ${meta.inputUnit ?? ""}`.trim(), {
+      [meta.inputKey]: value,
+    });
   };
 
   return (
@@ -121,6 +185,41 @@ export function CoachOnboard() {
               </button>
             ))}
           </div>
+        )}
+        {step === "meta" && goal && GOAL_META[goal]?.kind === "chips" && (
+          <div className="flex flex-wrap gap-2">
+            {GOAL_META[goal].chips!.map((c) => (
+              <button
+                key={c.label}
+                type="button"
+                onClick={() => void answerMeta(c.label, c.params)}
+                className="rounded-full border border-line bg-card px-3.5 py-1.5 text-sm text-ink-soft transition-colors hover:border-primary hover:text-ink"
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {step === "meta" && goal && GOAL_META[goal]?.kind === "number" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submitNumber();
+            }}
+            className="flex items-center gap-2"
+          >
+            <Input
+              type="number"
+              inputMode="decimal"
+              aria-label={GOAL_META[goal].inputLabel ?? "Value"}
+              placeholder={GOAL_META[goal].inputLabel}
+              value={numberDraft}
+              onChange={(e) => setNumberDraft(e.target.value)}
+            />
+            <Button type="submit" disabled={!numberDraft}>
+              Save
+            </Button>
+          </form>
         )}
         {step === "done" && (
           <Button className="w-full" onClick={() => router.push("/dashboard")}>

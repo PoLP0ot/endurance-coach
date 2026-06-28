@@ -133,6 +133,7 @@ const API_FIXTURES: Record<string, unknown> = {
     primary_goal: "marathon",
     race_name: "Paris Marathon",
     race_date: "2026-09-14",
+    goal_params: { target_time_s: 12600, race_distance_m: 42195 },
     units: "metric",
     weekly_email_opt_in: true,
     onboarding_complete: true,
