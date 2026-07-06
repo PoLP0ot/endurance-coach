@@ -76,19 +76,19 @@ Garmin), `/plans` (LLM) sans aucune limite.
 `core/config.py`, tests.
 **Dépendances** : aucune.
 
-## S6 — Bandeau « reconnecter Garmin » `[ ]`
+## S6 — Bandeau « reconnecter Garmin » `[x]`
 **Problème** : token Garmin expiré/révoqué → l'app se vide silencieusement.
 **Critères** : statut `error`/token invalide détecté à la sync → connexion
 marquée, dashboard affiche un bandeau avec CTA vers /onboarding ; vitest+pytest.
 **Dépendances** : S2 (erreurs typées réutilisées).
 
-## S7 — Toggle annuel réellement câblé `[ ]`
+## S7 — Toggle annuel réellement câblé `[x]`
 **Problème** : la landing affiche « Annual −18 % » mais un seul price_id existe.
 **Critères** : `paddle_price_id_annual` en config ; checkout accepte
 `{interval}` ; pricing page passe l'intervalle ; 503 si non configuré.
 **Dépendances** : S3 (surface abonnement propre).
 
-## S8 — Notification d'adaptation de plan `[ ]`
+## S8 — Notification d'adaptation de plan `[x]`
 **Problème** : le cron du dimanche modifie le plan sans prévenir l'athlète.
 **Critères** : l'adaptation écrit un événement ; le dashboard/plan affiche
 « Plan adapté dimanche : volume semaine 7 ajusté (−12 %) — pourquoi » ; le brief
@@ -99,7 +99,7 @@ du lundi le mentionne (fact déterministe, le LLM narre).
 **Nouvelle dépendance — à valider explicitement avant.** sentry-sdk (api) +
 @sentry/nextjs (web), DSN par env, sampling léger.
 
-## S10 — Retries jobs ARQ import `[ ]`
+## S10 — Retries jobs ARQ import `[x]`
 Backoff sur `import_garmin_activities` (max_tries=3), idempotence déjà en place.
 
 ---

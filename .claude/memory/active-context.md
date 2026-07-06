@@ -10,7 +10,13 @@ Shipped with full QA gates (104 pytest, 73 vitest, ruff/eslint/build green):
 - **S3 billing**: `POST /subscription/cancel` (Paddle API, injected canceller dep), `cancel_at_period_end` col (migration 0011) mirrored from webhook `scheduled_change`; **past_due now keeps premium** (dunning grace, D1-A); UI cancel confirm + payment-failed banner.
 - **S4 brief**: BriefCard on dashboard replaces CoachNote when `GET /coach/brief` succeeds; fallback (free/402/error) keeps the weekly assessment — one narrative always.
 - **S5 rate limiting**: `core/ratelimit.py` per-user sliding window (chat 20/min, garmin_login 5/5min, plans 5/h), 429+Retry-After, `rate_limit_enabled=False` autouse in tests.
-Remaining backlog: S6 reconnect banner, S7 annual price, S8 adaptation notice, S9 Sentry (new dep — needs approval), S10 ARQ retries. User-blocked launch items in DONE.md.
+Second pass same day — S6/S7/S8/S10 shipped too (107 pytest, 79 vitest):
+- **S6**: import auth failures (401/403) set connection `auth_expired` (`garmin_import.is_auth_failure`); dashboard `GarminStatusBanner` prompts reconnect.
+- **S7**: `paddle_price_id_annual` config; checkout accepts `{interval: month|year}` (503 `annual_price_not_configured`); subscription UI has a Monthly/Annual selector.
+- **S8**: `adapt_plan` records `structure.last_adaptation {at, adherence_pct, changes[week, from, to]}` (no migration — lives in the structure JSON); plan page shows a 7-day notice.
+- **S10**: worker retries transient import failures via `arq Retry` (linear backoff, `MAX_IMPORT_TRIES=3`, job requeued with visible label); auth failures never retry.
+- Docs/deps: CLAUDE.md + memory corrected (LLM = OpenAI); `anthropic` + `paddle-billing-client` dropped from requirements (unused).
+Remaining backlog: S9 Sentry only (new dep — needs explicit approval). User-blocked launch items in DONE.md.
 
 ## Previous Phase: BUILD (feature stories)
 

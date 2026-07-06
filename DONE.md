@@ -1,5 +1,32 @@
 # DONE — Audit business & productisation (2026-07-06)
 
+## Mise à jour (même jour) — « fix tout ce qui est fixable »
+
+S6–S8 et S10 livrées à leur tour (5 commits de plus, mêmes QA gates —
+107 pytest, 79 vitest, ruff/eslint/build verts) :
+
+- **S6** : un échec d'import qui « sent » l'auth (401/403) marque la connexion
+  `auth_expired` (les échecs transitoires non) ; le dashboard affiche un bandeau
+  « Reconnect Garmin » vers l'onboarding.
+- **S7** : facturation annuelle réellement câblée — `paddle_price_id_annual`,
+  checkout accepte `{interval}` (503 typé si non configuré), sélecteur
+  Monthly/Annual · save 18 % sur la page abonnement.
+- **S8** : l'adaptation du dimanche écrit `last_adaptation {at, adherence_pct,
+  changes[week, from→to]}` dans la structure du plan (pas de migration) ; la
+  page plan affiche l'encart pendant 7 jours — quelles semaines ont bougé et de
+  combien. Faits déterministes uniquement.
+- **S10** : les échecs transitoires d'import sont retentés (backoff linéaire,
+  3 essais, le job repasse « queued » avec label visible par le poll) ; les
+  échecs d'auth ne retentent jamais (S6 prend le relais).
+- **Docs/deps** : CLAUDE.md + memory disent enfin la vérité (LLM = OpenAI) ;
+  `anthropic` et `paddle-billing-client` retirés de requirements (importés
+  nulle part).
+
+Seule reste au backlog **S9 (Sentry)** — nouvelle dépendance, à valider
+explicitement. Le risque « écart CLAUDE.md/LLM » est résolu ; les autres
+risques et items user-blocked ci-dessous restent valides.
+
+
 ## Livré (6 commits, chaque story passée au QA gate complet)
 
 | Story | Commit | Ce que ça débloque |
