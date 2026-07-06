@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -90,8 +92,13 @@ async def cancel_subscription(
     }
 
 
+class CheckoutRequest(BaseModel):
+    interval: Literal["month", "year"] = "month"
+
+
 @router.post("/checkout")
 async def create_checkout(
+    body: CheckoutRequest | None = None,
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
     """Return the config the frontend needs to open Paddle checkout."""
@@ -99,9 +106,19 @@ async def create_checkout(
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "billing_not_configured"
         )
+    interval = body.interval if body is not None else "month"
+    if interval == "year":
+        if not settings.paddle_price_id_annual:
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE, "annual_price_not_configured"
+            )
+        price_id = settings.paddle_price_id_annual
+    else:
+        price_id = settings.paddle_price_id
     return {
         "client_token": settings.paddle_client_token,
-        "price_id": settings.paddle_price_id,
+        "price_id": price_id,
+        "interval": interval,
         "environment": settings.paddle_environment,
         "customer_email": user.email,
         "custom_data": {"user_id": user.id},

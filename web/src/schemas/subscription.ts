@@ -10,6 +10,7 @@ export const subscriptionStatusSchema = z.object({
 export const checkoutConfigSchema = z.object({
   client_token: z.string(),
   price_id: z.string(),
+  interval: z.enum(["month", "year"]).default("month"),
   environment: z.string(),
   customer_email: z.string().nullable(),
   custom_data: z.object({ user_id: z.string() }),

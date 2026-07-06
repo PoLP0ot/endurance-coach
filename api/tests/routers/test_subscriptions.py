@@ -46,6 +46,33 @@ def test_checkout_503_when_unconfigured(app_client, seed_user, monkeypatch):
     assert app_client.post("/subscription/checkout").status_code == 503
 
 
+def test_checkout_annual_uses_annual_price(app_client, seed_user, monkeypatch):
+    monkeypatch.setattr(settings, "paddle_price_id", "pri_month")
+    monkeypatch.setattr(settings, "paddle_price_id_annual", "pri_year")
+    body = app_client.post(
+        "/subscription/checkout", json={"interval": "year"}
+    ).json()
+    assert body["price_id"] == "pri_year"
+    assert body["interval"] == "year"
+
+
+def test_checkout_defaults_to_monthly(app_client, seed_user, monkeypatch):
+    monkeypatch.setattr(settings, "paddle_price_id", "pri_month")
+    body = app_client.post("/subscription/checkout").json()
+    assert body["price_id"] == "pri_month"
+    assert body["interval"] == "month"
+
+
+def test_checkout_annual_503_when_not_configured(
+    app_client, seed_user, monkeypatch
+):
+    monkeypatch.setattr(settings, "paddle_price_id", "pri_month")
+    monkeypatch.setattr(settings, "paddle_price_id_annual", "")
+    res = app_client.post("/subscription/checkout", json={"interval": "year"})
+    assert res.status_code == 503
+    assert res.json()["error"]["message"] == "annual_price_not_configured"
+
+
 def test_webhook_rejects_bad_signature(app_client, seed_user, monkeypatch):
     monkeypatch.setattr(settings, "paddle_webhook_secret", "shh")
     res = app_client.post(

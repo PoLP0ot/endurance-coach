@@ -40,6 +40,7 @@ export function SubscriptionView() {
   const [upgrading, setUpgrading] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [canceling, setCanceling] = useState(false);
+  const [interval, setInterval] = useState<"month" | "year">("month");
 
   const load = useCallback(async () => {
     setPhase("loading");
@@ -64,6 +65,7 @@ export function SubscriptionView() {
       const raw = await apiFetch<unknown>("/subscription/checkout", {
         method: "POST",
         token,
+        body: JSON.stringify({ interval }),
       });
       const config = checkoutConfigSchema.parse(raw);
       if (typeof window !== "undefined" && window.Paddle) {
@@ -189,7 +191,36 @@ export function SubscriptionView() {
   return (
     <div className="rounded border border-line bg-card p-6">
       <p className="font-display text-lg font-semibold">Upgrade to Premium</p>
-      <p className="mt-1 text-sm text-muted-foreground">$8/month · cancel anytime</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {interval === "month" ? "$8/month" : "$79/year"} · cancel anytime
+      </p>
+      <div
+        role="radiogroup"
+        aria-label="Billing interval"
+        className="mt-4 inline-flex rounded border border-line p-0.5"
+      >
+        {(
+          [
+            { value: "month", label: "Monthly" },
+            { value: "year", label: "Annual · save 18%" },
+          ] as const
+        ).map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={interval === opt.value}
+            onClick={() => setInterval(opt.value)}
+            className={
+              interval === opt.value
+                ? "rounded bg-ink px-3 py-1.5 text-xs font-semibold text-paper"
+                : "rounded px-3 py-1.5 text-xs text-muted-foreground hover:text-ink"
+            }
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
       <ul className="mt-4 space-y-2">
         {PREMIUM_FEATURES.map((f) => (
           <li key={f} className="flex items-center gap-2 text-sm">

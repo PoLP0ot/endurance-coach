@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     paddle_webhook_secret: str = ""
     paddle_client_token: str = ""
     paddle_price_id: str = ""
+    paddle_price_id_annual: str = ""
     paddle_environment: str = "sandbox"
 
     # Security

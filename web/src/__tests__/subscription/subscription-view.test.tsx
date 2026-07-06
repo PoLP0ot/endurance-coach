@@ -97,6 +97,7 @@ describe("SubscriptionView (US8)", () => {
       .mockResolvedValueOnce({
         client_token: "tok",
         price_id: "pri_1",
+        interval: "month",
         environment: "sandbox",
         customer_email: "a@b.com",
         custom_data: { user_id: "u1" },
@@ -107,7 +108,41 @@ describe("SubscriptionView (US8)", () => {
     await waitFor(() =>
       expect(apiFetch).toHaveBeenCalledWith(
         "/subscription/checkout",
-        expect.objectContaining({ method: "POST" }),
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ interval: "month" }),
+        }),
+      ),
+    );
+  });
+
+  it("passes the annual interval to checkout when selected", async () => {
+    apiFetch
+      .mockResolvedValueOnce({
+        status: "free",
+        is_premium: false,
+        current_period_end: null,
+      })
+      .mockResolvedValueOnce({
+        client_token: "tok",
+        price_id: "pri_year",
+        interval: "year",
+        environment: "sandbox",
+        customer_email: "a@b.com",
+        custom_data: { user_id: "u1" },
+      });
+    render(<SubscriptionView />);
+
+    fireEvent.click(await screen.findByRole("radio", { name: /annual/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /upgrade to premium/i }),
+    );
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith(
+        "/subscription/checkout",
+        expect.objectContaining({
+          body: JSON.stringify({ interval: "year" }),
+        }),
       ),
     );
   });
