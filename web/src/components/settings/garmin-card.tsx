@@ -66,7 +66,7 @@ export function GarminCard() {
           </div>
         </div>
         {connected ? (
-          <Button size="sm" onClick={syncNow} disabled={syncing}>
+          <Button size="sm" variant="outline" onClick={syncNow} disabled={syncing}>
             {syncing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {syncing ? "Syncing…" : "Sync now"}
           </Button>

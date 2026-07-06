@@ -62,6 +62,16 @@ export function BodyCard({ health }: { health: Health }) {
     a.key === health.feature ? -1 : b.key === health.feature ? 1 : 0,
   );
 
+  // Let the last tile absorb the remainder so the grid never trails a void.
+  const lastSpan = cn(
+    tiles.length % 2 === 1 && "col-span-2",
+    [
+      "",
+      "sm:col-span-3", // remainder 1 → span all three
+      "sm:col-span-2", // remainder 2 → span the last two
+    ][tiles.length % 3] || "sm:col-span-1",
+  );
+
   return (
     <section className="rounded border border-line bg-card">
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
@@ -73,12 +83,13 @@ export function BodyCard({ health }: { health: Health }) {
         </span>
       </div>
       <div className="grid grid-cols-2 overflow-hidden sm:grid-cols-3">
-        {tiles.map((t) => (
+        {tiles.map((t, i) => (
           <div
             key={t.key}
             className={cn(
               "-mb-px -mr-px border-b border-r border-line/60 bg-card p-4",
               t.key === health.feature && "ring-1 ring-inset ring-primary/40",
+              i === tiles.length - 1 && lastSpan,
             )}
           >
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
