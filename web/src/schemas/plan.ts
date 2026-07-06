@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const planSessionSchema = z.object({
+  day_index: z.number(), // 0 = Monday; rest days are absent from the array
+  kind: z.string(),
+  prescription: z.string(),
+  target_tss: z.number().nullable(),
+});
+
 export const planWeekSchema = z.object({
   week: z.number(),
   start_date: z.string(),
@@ -7,6 +14,7 @@ export const planWeekSchema = z.object({
   is_recovery: z.boolean(),
   target_tss: z.number(),
   focus: z.string(),
+  sessions: z.array(planSessionSchema).default([]),
 });
 
 export const planSchema = z.object({
@@ -24,6 +32,7 @@ export const currentPlanSchema = z.object({ plan: planSchema.nullable() });
 
 export type Plan = z.infer<typeof planSchema>;
 export type PlanWeek = z.infer<typeof planWeekSchema>;
+export type PlanSession = z.infer<typeof planSessionSchema>;
 
 export const GOALS = [
   { value: "marathon", label: "Marathon" },

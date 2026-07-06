@@ -64,6 +64,41 @@ describe("PlanView (US5)", () => {
     expect(screen.getByText(/regenerate your plan/i)).toBeInTheDocument();
   });
 
+  it("expands the current week into its prescribed days", async () => {
+    // A week starting this Monday is always "current" regardless of run date.
+    const monday = new Date();
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const iso = monday.toISOString().slice(0, 10);
+    const currentPlan = {
+      ...plan,
+      structure: {
+        goal: "marathon",
+        weeks: [
+          {
+            ...plan.structure.weeks[0],
+            start_date: iso,
+            sessions: [
+              {
+                day_index: 1,
+                kind: "interval",
+                prescription: "Intervals 6×1 km @ threshold",
+                target_tss: 70,
+              },
+            ],
+          },
+        ],
+      },
+    };
+    apiFetch.mockResolvedValueOnce({ plan: currentPlan });
+    render(<PlanView />);
+    expect(await screen.findByText("This week")).toBeInTheDocument();
+    expect(
+      screen.getByText("Intervals 6×1 km @ threshold"),
+    ).toBeInTheDocument();
+    // Unprescribed days render as rest, Monday-first.
+    expect(screen.getAllByText("Rest")).toHaveLength(6);
+  });
+
   it("prompts to upgrade when plans are gated (402)", async () => {
     apiFetch.mockRejectedValueOnce(new ApiError(402, "premium_required"));
     render(<PlanView />);
