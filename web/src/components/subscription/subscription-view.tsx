@@ -10,6 +10,7 @@ import {
   subscriptionStatusSchema,
   type SubscriptionStatus,
 } from "@/schemas/subscription";
+import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { Button } from "@/components/ui/button";
@@ -211,11 +212,12 @@ export function SubscriptionView() {
             role="radio"
             aria-checked={interval === opt.value}
             onClick={() => setInterval(opt.value)}
-            className={
+            className={cn(
+              "rounded px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
               interval === opt.value
-                ? "rounded bg-ink px-3 py-1.5 text-xs font-semibold text-paper"
-                : "rounded px-3 py-1.5 text-xs text-muted-foreground hover:text-ink"
-            }
+                ? "bg-ink font-semibold text-paper"
+                : "text-muted-foreground hover:text-ink",
+            )}
           >
             {opt.label}
           </button>

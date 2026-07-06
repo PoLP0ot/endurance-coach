@@ -68,12 +68,15 @@ export function TrainingLoadChart({ data }: { data: LoadPoint[] }) {
               strokeWidth={1.5}
               fill="hsl(var(--olive) / 0.12)"
             />
+            {/* Distinct dash patterns keep the three series readable for
+                color-blind athletes — never color alone. */}
             <Line
               type="monotone"
               dataKey="atl"
               name="Fatigue (ATL)"
               stroke="hsl(var(--rust))"
               strokeWidth={1.5}
+              strokeDasharray="4 3"
               dot={false}
             />
             <Line
@@ -82,6 +85,7 @@ export function TrainingLoadChart({ data }: { data: LoadPoint[] }) {
               name="Form (TSB)"
               stroke="hsl(var(--taupe))"
               strokeWidth={1.5}
+              strokeDasharray="9 4"
               dot={false}
             />
           </ComposedChart>
