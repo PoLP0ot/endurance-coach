@@ -32,13 +32,19 @@
 - Never dump metrics without context ("this is your HRV, it means...")
 
 ### Layout
-- Mobile (375px): bottom nav (Progress, Coach, Plan, More), single column, stacked
-- Desktop (≥1024px): sidebar navigation, multi-column, table layouts
+- Mobile (375px): bottom nav (Progress, Coach, Plan, Settings), single column, stacked
+- Desktop (≥1024px): sidebar navigation (adds Activities + Signals — every shipped route must be reachable from the shell; /explore was orphaned until the 2026-07-06 audit), multi-column, table layouts
 
 ### Components (shadcn/ui base + custom)
-- MetricCard, CoachNoteCard, TrainingLoadChart (Recharts)
-- ChatBubble, SuggestionChips, PlanTimeline
+- MetricCard, CoachNoteCard, TrainingLoadChart (Recharts ComposedChart — Line inside AreaChart is silently dropped)
+- GoalHero (single north-star card: race + countdown + band + projection; dark ink variant for race goals, paper variant otherwise)
+- ChatBubble, SuggestionChips (starter questions on empty coach thread), PlanTimeline (current week highlighted)
 - EmptyState, ErrorState, LoadingSkeleton (per-screen variants)
+
+### One-number-once rule (added after 2026-07-06 audit — dashboard showed Fitness/Form twice)
+A metric appears exactly once per screen. Goal-variant panels are deduped
+against the core grid and Your Body; unique ones join the core metric grid.
+Series/metric colors correspond: CTL/Fitness olive, ATL/Fatigue rust, TSB taupe.
 
 ### Interaction Standards
 - Page transitions: fade 200ms
