@@ -16,8 +16,8 @@
 - SQLAlchemy 2.x (async) + Alembic
 - Supabase (PostgreSQL, Auth, RLS)
 - python-jose (JWT validation)
-- anthropic (Claude SDK)
-- python-garminconnect (unofficial, behind GarminProvider)
+- openai (LLM narration — gpt-4o-mini / gpt-4o; `anthropic` and `paddle-billing-client` removed 2026-07-06 as unused)
+- python-garminconnect + garth (unofficial, behind GarminProvider; MFA via garth.sso directly)
 - ARQ + Redis (background jobs)
 - Resend (transactional email)
 - Paddle SDK (payments)

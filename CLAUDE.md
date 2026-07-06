@@ -11,7 +11,7 @@ AI coaching platform for endurance athletes. Import Garmin data, get personalize
 - **Payments:** Paddle (Merchant of Record)
 - **Queue:** ARQ + Redis (async jobs: Garmin import, AI analysis, emails)
 - **Email:** Resend
-- **AI:** Anthropic Claude (Sonnet for chat/analysis, Opus for plan generation)
+- **AI:** OpenAI (gpt-4o-mini for chat/analysis/brief, gpt-4o for plan generation), isolated behind `LLMProvider`
 - **Garmin:** python-garminconnect (unofficial, isolated behind GarminProvider interface)
 
 ## Architecture

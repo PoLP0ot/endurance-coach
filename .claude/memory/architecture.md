@@ -8,7 +8,7 @@ Browser (Next.js 15) → FastAPI → Supabase PostgreSQL
                     ARQ Workers (Redis)
                     ├── GarminProvider (python-garminconnect)
                     ├── AnalyticsEngine (TSS/CTL/ATL/TSB — deterministic)
-                    ├── LLMProvider (Anthropic Claude — narration only)
+                    ├── LLMProvider (OpenAI — narration only)
                     └── EmailWorker (Resend)
 ```
 
@@ -18,7 +18,7 @@ The AI NEVER computes numbers. AnalyticsEngine is pure Python, deterministic, fu
 ## Key Interfaces
 - `GarminProvider` — isolates unofficial python-garminconnect. Swap to official API via new implementation.
 - `AnalyticsEngine` — pure functions: TSS, CTL/ATL/TSB recurrence, recovery score, intensity distribution
-- `LLMProvider` — Anthropic Claude, with model router (Sonnet for chat, Opus for plan generation)
+- `LLMProvider` — OpenAI, with model router (gpt-4o-mini for chat/analysis/brief, gpt-4o for plan generation)
 
 ## Data Flow
 Garmin import → credentials encrypted at rest → ARQ job → Activity + Health APIs → store in PostgreSQL → AnalyticsEngine computes metrics → LLM generates narrative → cache in ai_analyses → serve to frontend

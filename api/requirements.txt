@@ -9,11 +9,9 @@ python-multipart==0.0.20
 httpx==0.28.1
 redis==5.2.1
 arq==0.26.3
-anthropic==0.42.0
 openai==1.59.2
 garminconnect==0.2.25
 resend==2.5.1
-paddle-billing-client==0.3.0
 pydantic==2.10.4
 pydantic-settings==2.7.1
 cryptography==44.0.0
