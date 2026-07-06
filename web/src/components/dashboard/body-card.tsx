@@ -72,12 +72,12 @@ export function BodyCard({ health }: { health: Health }) {
           {health.days}-day · Garmin
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-px bg-line/60 sm:grid-cols-3">
+      <div className="grid grid-cols-2 overflow-hidden sm:grid-cols-3">
         {tiles.map((t) => (
           <div
             key={t.key}
             className={cn(
-              "bg-card p-4",
+              "-mb-px -mr-px border-b border-r border-line/60 bg-card p-4",
               t.key === health.feature && "ring-1 ring-inset ring-primary/40",
             )}
           >

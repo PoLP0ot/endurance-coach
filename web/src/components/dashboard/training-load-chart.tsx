@@ -2,8 +2,8 @@
 
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
   ResponsiveContainer,
@@ -25,14 +25,14 @@ export function TrainingLoadChart({ data }: { data: LoadPoint[] }) {
   const tickInterval = Math.max(0, Math.floor(data.length / 6) - 1);
 
   return (
-    <div className="rounded-md border border-border p-4">
-      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="rounded border border-line bg-card p-5">
+      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
         Training load — 6 weeks{" "}
-        <span className="normal-case text-[10px]">(TSS units)</span>
+        <span className="normal-case tracking-normal">(TSS units)</span>
       </p>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+          <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="date"
@@ -64,24 +64,27 @@ export function TrainingLoadChart({ data }: { data: LoadPoint[] }) {
               type="monotone"
               dataKey="ctl"
               name="Fitness (CTL)"
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--primary) / 0.15)"
+              stroke="hsl(var(--olive))"
+              strokeWidth={1.5}
+              fill="hsl(var(--olive) / 0.12)"
             />
             <Line
               type="monotone"
               dataKey="atl"
               name="Fatigue (ATL)"
-              stroke="hsl(var(--destructive))"
+              stroke="hsl(var(--rust))"
+              strokeWidth={1.5}
               dot={false}
             />
             <Line
               type="monotone"
               dataKey="tsb"
               name="Form (TSB)"
-              stroke="hsl(var(--accent))"
+              stroke="hsl(var(--taupe))"
+              strokeWidth={1.5}
               dot={false}
             />
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>

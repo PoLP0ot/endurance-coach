@@ -119,13 +119,13 @@ export function DashboardView() {
           label="Fitness"
           value={data.fitness.ctl.toFixed(0)}
           hint="CTL · 42-day load"
-          accentClassName="text-primary"
+          accentClassName="text-olive"
         />
         <MetricCard
           label="Fatigue"
           value={data.fitness.atl.toFixed(0)}
           hint="ATL · 7-day load"
-          accentClassName="text-destructive"
+          accentClassName="text-rust"
         />
         <MetricCard
           label="Form"
@@ -136,7 +136,7 @@ export function DashboardView() {
           label="Recovery"
           value={String(data.recovery)}
           unit="/100"
-          accentClassName="text-accent"
+          accentClassName="text-olive"
         />
       </div>
       <GoalVariantPanels variant={data.goal_variant} />
