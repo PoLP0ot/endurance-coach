@@ -14,6 +14,18 @@ export function formatDuration(seconds: number | null): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/** "4:24/km" from distance + duration; null when either is missing/zero. */
+export function formatPace(
+  distanceM: number | null,
+  durationS: number | null,
+): string | null {
+  if (!distanceM || !durationS) return null;
+  const secPerKm = durationS / (distanceM / 1000);
+  const m = Math.floor(secPerKm / 60);
+  const s = Math.round(secPerKm % 60);
+  return `${m}:${String(s).padStart(2, "0")}/km`;
+}
+
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
     month: "short",
