@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 CONN_AUTH_EXPIRED = "auth_expired"
 
 
-def _is_auth_failure(exc: Exception) -> bool:
+def is_auth_failure(exc: Exception) -> bool:
     """True when a Garmin call failed because the session token is dead."""
     msg = str(exc).lower()
     return "401" in msg or "unauthorized" in msg or "403" in msg or "forbidden" in msg
@@ -270,7 +270,7 @@ def run_import(
             job.error = str(exc)
             db.add(job)
             db.commit()
-        if _is_auth_failure(exc):
+        if is_auth_failure(exc):
             conn = db.execute(
                 select(GarminConnection).where(
                     GarminConnection.user_id == user_id

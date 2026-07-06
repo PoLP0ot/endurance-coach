@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import date
 
 from arq import cron
+from arq.worker import Retry
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import settings
@@ -21,10 +22,14 @@ from app.services.brief import get_or_create_brief
 from app.services.coach_facts import build_coach_facts
 from app.services.email import EmailProvider, build_weekly_email
 from app.services.garmin import GarminConnectProvider
-from app.services.garmin_import import resolve_since, run_import
+from app.services.garmin_import import is_auth_failure, resolve_since, run_import
 from app.services.llm import LLMProvider
 from app.services.subscriptions import is_premium
 from app.services.today import todays_session
+
+# Transient import failures are retried with linear backoff; auth failures
+# aren't (retrying a dead token only worsens Garmin rate limiting).
+MAX_IMPORT_TRIES = 3
 
 
 async def import_garmin_activities(
@@ -45,14 +50,24 @@ async def import_garmin_activities(
             return {"user_id": user_id, "imported": 0, "error": "missing_state"}
 
         token = decrypt(connection.encrypted_tokens)
-        result = run_import(
-            db,
-            GarminConnectProvider(),
-            user_id=user_id,
-            token=token,
-            since=date.fromisoformat(since_iso),
-            job=job,
-        )
+        try:
+            result = run_import(
+                db,
+                GarminConnectProvider(),
+                user_id=user_id,
+                token=token,
+                since=date.fromisoformat(since_iso),
+                job=job,
+            )
+        except Exception as exc:  # noqa: BLE001 — classify for retry
+            job_try = ctx.get("job_try") or 1
+            if not is_auth_failure(exc) and job_try < MAX_IMPORT_TRIES:
+                job.status = JOB_QUEUED
+                job.progress_label = "Import hit a snag — retrying shortly…"
+                db.add(job)
+                db.commit()
+                raise Retry(defer=60 * job_try) from exc
+            raise
         connection.last_sync_at = job.updated_at
         db.add(connection)
         db.commit()
