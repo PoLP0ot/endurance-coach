@@ -11,8 +11,9 @@
 - Muted: #7C7765 (warm slate)
 - Lines: #CFC7B4 (warm taupe, 1px)
 - Accent: #D9703A (trail rust/orange)
+- Destructive: #9F3C2D (deep brick, hsl 8 56% 40%) — danger/errors ONLY, never a data color; must stay visually distinct from the accent orange
 - CTL (fitness): #6E7644 (olive)
-- ATL (fatigue): #C4612F (rust)
+- ATL (fatigue) + HR data lines: #C4612F (rust — data color, not destructive)
 - TSB (form): #A99C7F (taupe)
 
 ### Typography
@@ -33,12 +34,14 @@
 
 ### Layout
 - Mobile (375px): bottom nav (Progress, Coach, Plan, Settings), single column, stacked
-- Desktop (≥1024px): sidebar navigation (adds Activities + Signals — every shipped route must be reachable from the shell; /explore was orphaned until the 2026-07-06 audit), multi-column, table layouts
+- Desktop (≥1024px): sidebar navigation (adds Activities — every shipped route must be reachable from the shell), multi-column, table layouts
+- Signals live ON the dashboard (SignalsCard under the load chart); /explore redirects to /dashboard — a separate page duplicating dashboard concepts didn't earn its existence
 
 ### Components (shadcn/ui base + custom)
 - MetricCard, CoachNoteCard, TrainingLoadChart (Recharts ComposedChart — Line inside AreaChart is silently dropped)
 - GoalHero (single north-star card: race + countdown + band + projection; dark ink variant for race goals, paper variant otherwise)
-- ChatBubble, SuggestionChips (starter questions on empty coach thread), PlanTimeline (current week highlighted)
+- ChatBubble, SuggestionChips (starter questions on empty coach thread), PlanTimeline (current week highlighted + expanded into Monday-first day rows with today marked; rest days explicit)
+- SignalsCard (per-metric coach reads as questions, dashboard-inline; progressive — renders nothing while loading/on failure)
 - EmptyState, ErrorState, LoadingSkeleton (per-screen variants)
 
 ### One-number-once rule (added after 2026-07-06 audit — dashboard showed Fitness/Form twice)
