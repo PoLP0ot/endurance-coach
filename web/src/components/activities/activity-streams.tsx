@@ -98,7 +98,7 @@ function StreamChart({ samples }: { samples: StreamSample[] }) {
     <div className="rounded border border-line bg-card p-4">
       <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-[0.14em]">
         {hrRange && (
-          <span className="text-destructive">
+          <span className="text-rust">
             — Heart rate {hrRange[0]}–{hrRange[1]} bpm
           </span>
         )}
@@ -138,7 +138,7 @@ function StreamChart({ samples }: { samples: StreamSample[] }) {
             <path
               d={linePath(hr, w, h)}
               fill="none"
-              stroke="hsl(var(--destructive))"
+              stroke="hsl(var(--rust))"
               strokeWidth={1.5}
               vectorEffect="non-scaling-stroke"
             />

@@ -33,8 +33,9 @@
     --accent: 70 27% 36%; /* #6E7644 */
     --accent-foreground: 42 62% 96%;
 
-    /* Error / negative: rust */
-    --destructive: 20 61% 48%; /* #C4612F */
+    /* Error / destructive: deep brick — must read as danger, not as the
+       brand orange (#D9703A) or the ATL data color rust (#C4612F). */
+    --destructive: 8 56% 40%; /* #9F3C2D */
     --destructive-foreground: 42 62% 96%;
 
     --success: 70 27% 36%; /* olive */
