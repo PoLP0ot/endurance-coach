@@ -51,6 +51,7 @@ def adapt_plan(
     )
 
     changed = 0
+    changes: list[dict] = []
     for i, week in enumerate(weeks):
         if i <= cur_idx:
             continue
@@ -65,6 +66,9 @@ def adapt_plan(
             continue
         new_target = round(max(target, 0.0), 1)
         if abs(new_target - week["target_tss"]) > 0.1:
+            changes.append(
+                {"week": week["week"], "from": week["target_tss"], "to": new_target}
+            )
             week["target_tss"] = new_target
             week["sessions"] = [
                 s
@@ -75,4 +79,11 @@ def adapt_plan(
 
     structure["version"] = structure.get("version", 1) + 1
     structure["adapted_at"] = today.isoformat()
+    if changed:
+        # What the athlete sees on the plan page: which upcoming weeks moved.
+        structure["last_adaptation"] = {
+            "at": today.isoformat(),
+            "adherence_pct": adherence_pct,
+            "changes": changes,
+        }
     return {"changed_weeks": changed, "version": structure["version"]}

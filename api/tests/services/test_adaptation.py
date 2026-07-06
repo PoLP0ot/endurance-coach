@@ -35,6 +35,31 @@ def test_adaptation_never_rewrites_past_or_current_week():
     assert after[:4] == before[:4]  # weeks 1-4 untouched
 
 
+def test_adaptation_records_a_change_summary_for_the_athlete():
+    """The athlete must be able to see what changed and why (S8)."""
+    structure = _structure()
+    before = {w["week"]: w["target_tss"] for w in structure["weeks"]}
+    adapt_plan(structure, current_ctl=20.0, adherence_pct=50, today=START)
+
+    last = structure["last_adaptation"]
+    assert last["at"] == START.isoformat()
+    assert last["changes"]
+    for change in last["changes"]:
+        assert change["from"] == before[change["week"]]
+        assert change["to"] != change["from"]
+
+
+def test_no_change_leaves_no_adaptation_notice():
+    structure = _structure()
+    # Re-adapting from the same CTL/adherence the plan was built on: no-op-ish
+    # runs must not fabricate a notice.
+    adapt_plan(structure, current_ctl=20.0, adherence_pct=50, today=START)
+    structure["last_adaptation"] = None
+    summary = adapt_plan(structure, current_ctl=20.0, adherence_pct=50, today=START)
+    if summary["changed_weeks"] == 0:
+        assert structure["last_adaptation"] is None
+
+
 def test_adapted_weeks_regenerate_sessions():
     structure = _structure()
     adapt_plan(structure, current_ctl=80.0, adherence_pct=100, today=START)

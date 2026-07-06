@@ -99,6 +99,45 @@ describe("PlanView (US5)", () => {
     expect(screen.getAllByText("Rest")).toHaveLength(6);
   });
 
+  it("tells the athlete when the plan was recently adapted", async () => {
+    const today = new Date();
+    const iso = today.toISOString().slice(0, 10);
+    const adapted = {
+      ...plan,
+      structure: {
+        ...plan.structure,
+        last_adaptation: {
+          at: iso,
+          adherence_pct: 60,
+          changes: [{ week: 5, from: 340, to: 306 }],
+        },
+      },
+    };
+    apiFetch.mockResolvedValueOnce({ plan: adapted });
+    render(<PlanView />);
+    expect(await screen.findByText(/plan adapted/i)).toBeInTheDocument();
+    expect(screen.getByText(/week 5/i)).toBeInTheDocument();
+    expect(screen.getByText(/340\s*→\s*306/)).toBeInTheDocument();
+  });
+
+  it("hides stale adaptation notices", async () => {
+    const adapted = {
+      ...plan,
+      structure: {
+        ...plan.structure,
+        last_adaptation: {
+          at: "2026-01-04",
+          adherence_pct: 60,
+          changes: [{ week: 5, from: 340, to: 306 }],
+        },
+      },
+    };
+    apiFetch.mockResolvedValueOnce({ plan: adapted });
+    render(<PlanView />);
+    expect(await screen.findByText("Week 1")).toBeInTheDocument();
+    expect(screen.queryByText(/plan adapted/i)).not.toBeInTheDocument();
+  });
+
   it("prompts to upgrade when plans are gated (402)", async () => {
     apiFetch.mockRejectedValueOnce(new ApiError(402, "premium_required"));
     render(<PlanView />);

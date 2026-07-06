@@ -19,6 +19,14 @@ import { PlanTimeline } from "./plan-timeline";
 
 type Phase = "loading" | "error" | "premium" | "ready";
 
+const ADAPTATION_NOTICE_DAYS = 7;
+
+/** The adaptation notice only while it's news, not history. */
+function isRecent(iso: string): boolean {
+  const at = new Date(`${iso}T00:00:00`).getTime();
+  return Date.now() - at < ADAPTATION_NOTICE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 /** Training plan screen: generate a periodized plan or view the active one (US5). */
 export function PlanView() {
   const [phase, setPhase] = useState<Phase>("loading");
@@ -149,6 +157,34 @@ export function PlanView() {
 
       {plan && (
         <div className="space-y-4">
+          {plan.structure.last_adaptation &&
+            plan.structure.last_adaptation.changes.length > 0 &&
+            isRecent(plan.structure.last_adaptation.at) && (
+              <section
+                aria-label="Plan adaptation notice"
+                className="rounded border border-line border-l-2 border-l-olive bg-card p-4"
+              >
+                <p className="text-sm text-ink-soft">
+                  <span className="font-semibold text-ink">
+                    Plan adapted{" "}
+                    {new Date(
+                      `${plan.structure.last_adaptation.at}T00:00:00`,
+                    ).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                    .
+                  </span>{" "}
+                  Upcoming weeks were retargeted to your actual training load
+                  and adherence — race weeks stay untouched.
+                </p>
+                <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
+                  {plan.structure.last_adaptation.changes
+                    .map((c) => `Week ${c.week}: ${c.from} → ${c.to} TSS`)
+                    .join(" · ")}
+                </p>
+              </section>
+            )}
           {plan.narrative && (
             <section
               aria-label="Plan rationale"
