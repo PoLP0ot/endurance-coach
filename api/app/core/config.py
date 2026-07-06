@@ -18,11 +18,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     log_level: str = "INFO"
 
-    # Supabase / Auth
+    # Supabase / Auth — the JWKS URL is derived from supabase_url (deps.py).
     supabase_url: str = ""
-    supabase_service_key: str = ""
     supabase_jwt_secret: str = ""
-    supabase_jwks_url: str = ""
     jwt_algorithm: str = "HS256"
     jwt_audience: str = "authenticated"
 
