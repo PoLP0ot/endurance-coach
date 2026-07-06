@@ -450,6 +450,22 @@ test("plan adaptation notice", async ({ page }, testInfo) => {
   await shoot(page, "plan-adapted", testInfo.project.name);
 });
 
+test("garmin import progress checklist", async ({ page }, testInfo) => {
+  await setupAuth(page, {
+    "/garmin/connect": { job_id: "job-9", status: "queued" },
+    "/garmin/import-status/job-9": {
+      status: "running",
+      progress_label: "Analyzing metrics…",
+    },
+  });
+  await page.goto("/onboarding", { waitUntil: "networkidle" });
+  await page.getByLabel(/garmin email/i).fill("marc@example.com");
+  await page.getByLabel(/garmin password/i).fill("pw");
+  await page.getByRole("button", { name: /connect garmin/i }).click();
+  await page.getByText(/analyzing metrics/i).first().waitFor();
+  await shoot(page, "garmin-importing", testInfo.project.name);
+});
+
 test("empty coach thread with starter chips", async ({ page }, testInfo) => {
   await setupAuth(page, { "/chat/messages": { messages: [] } });
   await page.goto("/coach", { waitUntil: "networkidle" });

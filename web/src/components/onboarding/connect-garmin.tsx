@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Lock, ShieldCheck, Watch } from "lucide-react";
+import { Lock, ShieldCheck, Watch } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ApiError, apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImportProgress } from "./import-progress";
 
 type Phase = "idle" | "importing" | "mfa";
 
@@ -124,14 +125,7 @@ export function ConnectGarmin() {
   };
 
   if (phase === "importing") {
-    return (
-      <div className="flex flex-col items-center gap-4 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
-        <p role="status" className="text-sm text-muted-foreground">
-          {label}
-        </p>
-      </div>
-    );
+    return <ImportProgress label={label} />;
   }
 
   if (phase === "mfa") {
