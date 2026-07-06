@@ -29,7 +29,7 @@ Garmin import → credentials encrypted at rest → ARQ job → Activity + Healt
 ## API Surface (current)
 - `GET /health`, `GET /me` (identity probe)
 - `GET/PATCH /profile` — user profile (US11a)
-- Garmin: `POST /garmin/connect`, `GET /garmin/status`, `GET /garmin/import-status/{job}`, `POST /garmin/sync`, `POST /garmin/disconnect`
+- Garmin: `POST /garmin/connect` (409 `garmin_mfa_required` stashes a resumable garth state), `POST /garmin/mfa` {code} (202 completes login; 410 expired, 401 bad code — challenge kept for retry), `GET /garmin/status`, `GET /garmin/import-status/{job}`, `POST /garmin/sync`, `POST /garmin/disconnect`. Provider login goes through `garth.sso.login(return_on_mfa=True)` directly (garminconnect 0.2.25 can't resume MFA); pending challenges live in `services/garmin_mfa.py` — in-process, TTL 300 s, single-instance assumption.
 - `GET /dashboard` — coach-first fitness/form/recovery + load series
 - `GET /activities`, `GET /activities/{id}`, `GET /activities/{id}/analysis` (premium)
 - Chat: `GET /chat/messages`, `POST /chat` (premium)

@@ -24,7 +24,15 @@ class GarminAuthError(GarminError):
 
 
 class GarminMFARequired(GarminError):
-    """The Garmin account requires multi-factor authentication."""
+    """The Garmin account requires multi-factor authentication.
+
+    Carries the garth ``client_state`` needed by ``resume_login`` — a live
+    HTTP client, so it must stay in process memory (see services.garmin_mfa).
+    """
+
+    def __init__(self, message: str, client_state: dict | None = None) -> None:
+        super().__init__(message)
+        self.client_state = client_state
 
 
 class GarminAccountLocked(GarminError):
@@ -71,6 +79,14 @@ class GarminProvider(Protocol):
         """
         ...
 
+    def resume_login(self, client_state: dict, mfa_code: str) -> str:
+        """Complete an MFA login challenge; return the session token blob.
+
+        Raises GarminAuthError on a rejected code, GarminAccountLocked on
+        rate-limiting.
+        """
+        ...
+
     def list_activities(self, token: str, since: date) -> list[GarminActivity]:
         """Return activities on/after `since`."""
         ...
@@ -98,36 +114,63 @@ class GarminConnectProvider:
     """
 
     def login(self, username: str, password: str) -> str:
-        from garminconnect import (
-            Garmin,
-            GarminConnectAuthenticationError,
-            GarminConnectTooManyRequestsError,
-        )
+        """Authenticate via garth directly so MFA returns a resumable state.
 
-        client = Garmin(username, password)
+        garminconnect's ``Garmin.login`` can only prompt for the MFA code
+        synchronously; ``garth.sso.login(return_on_mfa=True)`` instead hands
+        back a client_state we can resume from a second HTTP request.
+        """
+        import garth.sso as sso
+        from garth import Client as GarthClient
+
+        client = GarthClient()
         try:
-            client.login()
-        except GarminConnectTooManyRequestsError as exc:
-            raise GarminAccountLocked(str(exc)) from exc
-        except GarminConnectAuthenticationError as exc:
-            if "mfa" in str(exc).lower() or "multi-factor" in str(exc).lower():
-                raise GarminMFARequired(str(exc)) from exc
-            raise GarminAuthError(str(exc)) from exc
+            result = sso.login(username, password, client=client, return_on_mfa=True)
         except Exception as exc:  # noqa: BLE001 — garth/requests raise their own types
+            raise self._map_login_error(exc) from exc
+        if isinstance(result, dict) and result.get("needs_mfa"):
+            raise GarminMFARequired(
+                "Garmin account requires a verification code.",
+                client_state=result.get("client_state"),
+            )
+        client.oauth1_token, client.oauth2_token = result
+        return client.dumps()
+
+    def resume_login(self, client_state: dict, mfa_code: str) -> str:
+        import garth.sso as sso
+
+        try:
+            oauth1, oauth2 = sso.resume_login(client_state, mfa_code)
+        except Exception as exc:  # noqa: BLE001 — garth raises its own types
             msg = str(exc).lower()
             if "429" in msg or "too many" in msg or "rate" in msg:
                 raise GarminAccountLocked(
-                    "Garmin is rate-limiting login attempts — wait a few minutes "
-                    "and try again."
+                    "Garmin is rate-limiting attempts — wait a few minutes."
                 ) from exc
-            if "mfa" in msg or "multi-factor" in msg:
-                raise GarminMFARequired(str(exc)) from exc
             raise GarminAuthError(
-                "Garmin rejected the login (401). Check your credentials; if the "
-                "account uses two-factor auth, or you've retried several times, "
-                "Garmin may be temporarily blocking — wait and try once."
+                "Garmin rejected the verification code."
             ) from exc
-        return client.garth.dumps()
+        client = client_state["client"]
+        client.oauth1_token = oauth1
+        client.oauth2_token = oauth2
+        return client.dumps()
+
+    @staticmethod
+    def _map_login_error(exc: Exception) -> GarminError:
+        """Translate garth/requests login failures into typed Garmin errors."""
+        msg = str(exc).lower()
+        if "429" in msg or "too many" in msg or "rate" in msg:
+            return GarminAccountLocked(
+                "Garmin is rate-limiting login attempts — wait a few minutes "
+                "and try again."
+            )
+        if "mfa" in msg or "multi-factor" in msg:
+            return GarminMFARequired(str(exc))
+        return GarminAuthError(
+            "Garmin rejected the login (401). Check your credentials; if the "
+            "account uses two-factor auth, or you've retried several times, "
+            "Garmin may be temporarily blocking — wait and try once."
+        )
 
     def list_activities(self, token: str, since: date) -> list[GarminActivity]:
         client = self._client_from_token(token)

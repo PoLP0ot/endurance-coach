@@ -15,6 +15,7 @@ from app.jobs.queue import enqueue_garmin_import
 from app.models.garmin import GarminConnection
 from app.models.import_job import JOB_QUEUED, ImportJob
 from app.models.user import User
+from app.services import garmin_mfa
 from app.services.garmin import (
     GarminAccountLocked,
     GarminAuthError,
@@ -42,6 +43,10 @@ def get_enqueuer() -> Enqueuer:
 class ConnectRequest(BaseModel):
     username: str = Field(min_length=1)
     password: str = Field(min_length=1)
+
+
+class MFARequest(BaseModel):
+    code: str = Field(min_length=1)
 
 
 def _get_or_create_user(db: Session, current: CurrentUser) -> User:
@@ -104,6 +109,10 @@ async def connect(
     try:
         token = provider.login(body.username, body.password)
     except GarminMFARequired as exc:
+        # Keep the resumable garth state so POST /garmin/mfa can finish the
+        # login without re-sending the password.
+        if exc.client_state is not None:
+            garmin_mfa.stash(user.id, body.username, exc.client_state)
         raise HTTPException(status.HTTP_409_CONFLICT, "garmin_mfa_required") from exc
     except GarminAccountLocked as exc:
         # Transient rate-limit (Garmin 429), NOT a credential failure: reuse a
@@ -122,6 +131,44 @@ async def connect(
 
     _get_or_create_user(db, user)
     conn = _upsert_connection(db, user.id, encrypt(token), body.username)
+    since = resolve_since(conn, date.today())
+    job = _queue_import(db, user.id)
+    await enqueue(user.id, job.id, since.isoformat())
+    return {"job_id": job.id, "status": job.status}
+
+
+@router.post("/mfa", status_code=status.HTTP_202_ACCEPTED)
+async def connect_mfa(
+    body: MFARequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    provider: GarminProvider = Depends(get_garmin_provider),
+    enqueue: Enqueuer = Depends(get_enqueuer),
+) -> dict:
+    """Finish a pending MFA login with the emailed/authenticator code.
+
+    410 when no challenge is pending (or it expired) — the client restarts
+    the connect flow. 401 on a rejected code; the challenge is kept so the
+    athlete can retry within the TTL.
+    """
+    pending = garmin_mfa.pop(user.id)
+    if pending is None:
+        raise HTTPException(status.HTTP_410_GONE, "garmin_mfa_expired")
+    username, client_state = pending
+    try:
+        token = provider.resume_login(client_state, body.code)
+    except GarminAccountLocked as exc:
+        raise HTTPException(
+            status.HTTP_423_LOCKED, "garmin_account_locked"
+        ) from exc
+    except GarminAuthError as exc:
+        garmin_mfa.stash(user.id, username, client_state)
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "garmin_mfa_invalid"
+        ) from exc
+
+    _get_or_create_user(db, user)
+    conn = _upsert_connection(db, user.id, encrypt(token), username)
     since = resolve_since(conn, date.today())
     job = _queue_import(db, user.id)
     await enqueue(user.id, job.id, since.isoformat())

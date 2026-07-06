@@ -1,14 +1,18 @@
-"""Garmin router tests (US1.3, 1.4, 1.9, 1.11) with overridden deps."""
+"""Garmin router tests (US1.3, 1.4, 1.9, 1.11, S2 MFA) with overridden deps."""
 from __future__ import annotations
 
+import pytest
 from app.core.security import decrypt
 from app.main import app
 from app.models.garmin import GarminConnection
 from app.models.import_job import ImportJob
 from app.routers.garmin import get_garmin_provider
-from app.services.garmin import GarminMFARequired
+from app.services import garmin_mfa
+from app.services.garmin import GarminAuthError, GarminMFARequired
 
 from tests.conftest import TEST_USER_ID
+
+VALID_MFA_CODE = "123456"
 
 
 class _FakeProvider:
@@ -21,9 +25,21 @@ class _FakeProvider:
             raise self._raises
         return self._token
 
+    def resume_login(self, client_state, mfa_code):
+        if mfa_code != VALID_MFA_CODE:
+            raise GarminAuthError("bad code")
+        return self._token
+
 
 def _use_provider(provider):
     app.dependency_overrides[get_garmin_provider] = lambda: provider
+
+
+@pytest.fixture(autouse=True)
+def _clear_pending_mfa():
+    garmin_mfa.clear()
+    yield
+    garmin_mfa.clear()
 
 
 def test_connect_stores_encrypted_token_and_enqueues(
@@ -54,6 +70,58 @@ def test_connect_mfa_returns_typed_error(app_client):
     )
     assert resp.status_code == 409
     assert resp.json()["error"]["message"] == "garmin_mfa_required"
+
+
+def test_mfa_code_completes_connect_and_enqueues(
+    app_client, db_session, enqueue_spy
+):
+    """409 on connect, then POST /garmin/mfa finishes the login end-to-end."""
+    _use_provider(
+        _FakeProvider(
+            token="MFA_TOKEN",
+            raises=GarminMFARequired("need mfa", client_state={"k": 1}),
+        )
+    )
+    resp = app_client.post(
+        "/garmin/connect", json={"username": "u@example.com", "password": "pw"}
+    )
+    assert resp.status_code == 409
+
+    resp = app_client.post("/garmin/mfa", json={"code": VALID_MFA_CODE})
+    assert resp.status_code == 202
+    job_id = resp.json()["job_id"]
+
+    conn = db_session.query(GarminConnection).filter_by(user_id=TEST_USER_ID).one()
+    assert decrypt(conn.encrypted_tokens) == "MFA_TOKEN"
+    assert conn.status == "connected"
+    assert conn.garmin_username == "u@example.com"
+    assert db_session.get(ImportJob, job_id) is not None
+    assert len(enqueue_spy.calls) == 1
+
+
+def test_mfa_without_pending_challenge_is_410(app_client):
+    _use_provider(_FakeProvider())
+    resp = app_client.post("/garmin/mfa", json={"code": VALID_MFA_CODE})
+    assert resp.status_code == 410
+    assert resp.json()["error"]["message"] == "garmin_mfa_expired"
+
+
+def test_mfa_invalid_code_is_401_and_allows_retry(app_client, db_session):
+    _use_provider(
+        _FakeProvider(
+            token="MFA_TOKEN",
+            raises=GarminMFARequired("need mfa", client_state={"k": 1}),
+        )
+    )
+    app_client.post("/garmin/connect", json={"username": "u", "password": "pw"})
+
+    resp = app_client.post("/garmin/mfa", json={"code": "000000"})
+    assert resp.status_code == 401
+    assert resp.json()["error"]["message"] == "garmin_mfa_invalid"
+
+    # The challenge survives a wrong code — retry with the right one.
+    resp = app_client.post("/garmin/mfa", json={"code": VALID_MFA_CODE})
+    assert resp.status_code == 202
 
 
 def test_status_reports_disconnected_without_connection(app_client):

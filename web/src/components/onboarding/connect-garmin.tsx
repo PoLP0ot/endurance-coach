@@ -3,14 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Lock, Watch } from "lucide-react";
+import { Loader2, Lock, ShieldCheck, Watch } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Phase = "idle" | "importing" | "error";
+type Phase = "idle" | "importing" | "mfa";
 
 interface ConnectResponse {
   job_id: string;
@@ -21,6 +21,19 @@ interface ImportStatus {
   progress_label: string | null;
 }
 
+/** Human message for each typed Garmin connect failure. */
+function connectErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 401) {
+      return "Garmin didn't accept those credentials. Check your Garmin email and password.";
+    }
+    if (err.status === 423) {
+      return "Your Garmin account is temporarily locked after too many attempts. Wait a few minutes, then try again.";
+    }
+  }
+  return "We couldn't connect to Garmin. Please try again.";
+}
+
 async function getToken(): Promise<string | undefined> {
   const supabase = createClient();
   const {
@@ -29,10 +42,11 @@ async function getToken(): Promise<string | undefined> {
   return session?.access_token;
 }
 
-/** Onboarding: connect Garmin, then poll import progress (US1.12, O1–O4). */
+/** Onboarding: connect Garmin (incl. MFA), then poll import progress (US1.12, S2). */
 export function ConnectGarmin() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
+  const [error, setError] = useState<string | null>(null);
   const [label, setLabel] = useState("Importing your Garmin data…");
 
   const poll = async (jobId: string, token: string | undefined) => {
@@ -44,7 +58,10 @@ export function ConnectGarmin() {
     if (status.status === "done") {
       router.push("/dashboard");
     } else if (status.status === "error") {
-      setPhase("error");
+      setPhase("idle");
+      setError(
+        "The import failed partway. Your connection is saved — try a sync from Settings.",
+      );
     } else {
       setTimeout(() => void poll(jobId, token), 1500);
     }
@@ -53,6 +70,7 @@ export function ConnectGarmin() {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    setError(null);
     setPhase("importing");
     try {
       const token = await getToken();
@@ -65,8 +83,43 @@ export function ConnectGarmin() {
         }),
       });
       await poll(job_id, token);
-    } catch {
-      setPhase("error");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setPhase("mfa");
+        return;
+      }
+      setPhase("idle");
+      setError(connectErrorMessage(err));
+    }
+  };
+
+  const onSubmitCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setError(null);
+    try {
+      const token = await getToken();
+      const { job_id } = await apiFetch<ConnectResponse>("/garmin/mfa", {
+        method: "POST",
+        token,
+        body: JSON.stringify({ code: form.get("code") }),
+      });
+      setPhase("importing");
+      await poll(job_id, token);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError("That code didn't match — check it and try again.");
+        return; // stay on the MFA step, the challenge is still open
+      }
+      if (err instanceof ApiError && err.status === 410) {
+        setPhase("idle");
+        setError(
+          "The verification window expired. Enter your credentials again to get a new code.",
+        );
+        return;
+      }
+      setPhase("idle");
+      setError(connectErrorMessage(err));
     }
   };
 
@@ -76,6 +129,52 @@ export function ConnectGarmin() {
         <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
         <p role="status" className="text-sm text-muted-foreground">
           {label}
+        </p>
+      </div>
+    );
+  }
+
+  if (phase === "mfa") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center gap-3 text-accent">
+          <ShieldCheck className="h-8 w-8" aria-hidden />
+        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Garmin sent a verification code to your email or authenticator app.
+          Enter it to finish connecting.
+        </p>
+        <form onSubmit={onSubmitCode} className="space-y-4" noValidate>
+          <div className="space-y-1.5">
+            <Label htmlFor="code">Verification code</Label>
+            <Input
+              id="code"
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              autoFocus
+            />
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" className="w-full">
+            Verify
+          </Button>
+        </form>
+        <p className="text-center text-sm">
+          <button
+            type="button"
+            onClick={() => {
+              setPhase("idle");
+              setError(null);
+            }}
+            className="text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Start over
+          </button>
         </p>
       </div>
     );
@@ -100,9 +199,9 @@ export function ConnectGarmin() {
             autoComplete="current-password"
           />
         </div>
-        {phase === "error" && (
+        {error && (
           <p role="alert" className="text-sm text-destructive">
-            We couldn&apos;t connect to Garmin. Please try again.
+            {error}
           </p>
         )}
         <Button type="submit" className="w-full">

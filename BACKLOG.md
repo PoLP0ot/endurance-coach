@@ -17,7 +17,7 @@ de santé (obligation RGPD).
 `site-footer.tsx`, tests.
 **Dépendances** : aucune.
 
-## S2 — Flux MFA Garmin complet `[ ]`
+## S2 — Flux MFA Garmin complet `[x]`
 **Problème** : un compte Garmin avec 2FA ne peut pas s'activer (409 sans suite) ;
 toutes les erreurs de connexion sont écrasées en un message générique.
 **Critères d'acceptation** :
