@@ -1,5 +1,6 @@
-import { SignalsView } from "@/components/explore/signals-view";
+import { redirect } from "next/navigation";
 
+/** Signals now live on the dashboard; keep old links working. */
 export default function ExplorePage() {
-  return <SignalsView />;
+  redirect("/dashboard");
 }

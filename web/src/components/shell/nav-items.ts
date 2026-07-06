@@ -3,7 +3,6 @@ import {
   CalendarRange,
   History,
   MessageSquare,
-  Radar,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -22,7 +21,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/coach", label: "Coach", icon: MessageSquare, mobile: true },
   { href: "/plan", label: "Plan", icon: CalendarRange, mobile: true },
   { href: "/activities", label: "Activities", icon: History, mobile: false },
-  { href: "/explore", label: "Signals", icon: Radar, mobile: false },
   { href: "/settings", label: "Settings", icon: Settings, mobile: true },
 ] as const;
 

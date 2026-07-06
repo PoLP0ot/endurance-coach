@@ -16,6 +16,7 @@ import { MetricCard } from "./metric-card";
 import { CoachNote } from "./coach-note";
 import { TrainingLoadChart } from "./training-load-chart";
 import { GoalHero } from "./goal-hero";
+import { SignalsCard } from "./signals-card";
 import { WeekGlance } from "./week-glance";
 import { BodyCard } from "./body-card";
 import { TodayCard } from "@/components/coach/today-card";
@@ -170,25 +171,18 @@ export function DashboardView() {
       <WeekGlance data={data.this_week} />
       {data.health && <BodyCard health={data.health} />}
       <TrainingLoadChart data={data.load_series} />
+      <SignalsCard />
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           {data.totals.activity_count} activities · {km} km in the last{" "}
           {data.totals.window_days} days
         </p>
-        <span className="flex gap-4">
-          <Link
-            href="/explore"
-            className="text-sm text-primary underline-offset-4 hover:underline"
-          >
-            Explore signals
-          </Link>
-          <Link
-            href="/activities"
-            className="text-sm text-primary underline-offset-4 hover:underline"
-          >
-            View history
-          </Link>
-        </span>
+        <Link
+          href="/activities"
+          className="text-sm text-primary underline-offset-4 hover:underline"
+        >
+          View history
+        </Link>
       </div>
     </div>
   );
