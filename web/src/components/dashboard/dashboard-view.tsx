@@ -15,9 +15,7 @@ import { Button } from "@/components/ui/button";
 import { MetricCard } from "./metric-card";
 import { CoachNote } from "./coach-note";
 import { TrainingLoadChart } from "./training-load-chart";
-import { GoalBanner } from "./goal-banner";
-import { GoalProgressBanner } from "./goal-progress-banner";
-import { GoalVariantPanels } from "./goal-variant-panels";
+import { GoalHero } from "./goal-hero";
 import { WeekGlance } from "./week-glance";
 import { BodyCard } from "./body-card";
 import { TodayCard } from "@/components/coach/today-card";
@@ -26,6 +24,25 @@ type Phase =
   | { kind: "loading" }
   | { kind: "error" }
   | { kind: "ready"; data: Dashboard; goal: string | null };
+
+/**
+ * Metrics already shown by the core grid or the Your Body card. Goal panels
+ * matching these labels are duplicates and are dropped; unique ones join the
+ * core grid so each number appears exactly once.
+ */
+const SHOWN_ELSEWHERE = new Set([
+  "Fitness",
+  "Fatigue",
+  "Form",
+  "Recovery",
+  "HRV",
+  "Resting HR",
+  "Sleep",
+  "Steps",
+  "Body Battery",
+  "Stress",
+  "Weight",
+]);
 
 /** Goal-aware framing for the dashboard "lens" (A13). */
 const GOAL_LENS: Record<string, string> = {
@@ -96,6 +113,9 @@ export function DashboardView() {
   }
 
   const km = ((data.totals.total_distance_m ?? 0) / 1000).toFixed(1);
+  const goalPanels = data.goal_variant.panels.filter(
+    (p) => !SHOWN_ELSEWHERE.has(p.label),
+  );
 
   return (
     <div className="space-y-6">
@@ -110,8 +130,7 @@ export function DashboardView() {
         )}
       </div>
       {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
-      {data.goal && <GoalBanner goal={data.goal} />}
-      <GoalProgressBanner progress={data.goal_structured} />
+      <GoalHero goal={data.goal} progress={data.goal_structured} />
       <TodayCard />
       <CoachNote headline={data.form.headline} detail={data.form.detail} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -138,8 +157,16 @@ export function DashboardView() {
           unit="/100"
           accentClassName="text-olive"
         />
+        {goalPanels.map((p) => (
+          <MetricCard
+            key={p.label}
+            label={p.label}
+            value={String(p.value)}
+            unit={p.unit || undefined}
+            hint={p.hint || undefined}
+          />
+        ))}
       </div>
-      <GoalVariantPanels variant={data.goal_variant} />
       <WeekGlance data={data.this_week} />
       {data.health && <BodyCard health={data.health} />}
       <TrainingLoadChart data={data.load_series} />

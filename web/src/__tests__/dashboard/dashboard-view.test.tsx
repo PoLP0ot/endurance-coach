@@ -69,12 +69,30 @@ describe("DashboardView (US2)", () => {
     expect(screen.getByText(/12 activities/i)).toBeInTheDocument();
   });
 
-  it("renders the goal progress band and goal-specific panels", async () => {
+  it("renders the goal progress band and dedupes goal panels", async () => {
     apiFetch.mockResolvedValueOnce(payload);
     render(<DashboardView />);
     expect(await screen.findByText("On track")).toBeInTheDocument();
     expect(screen.getByText(/Projected finish 3:28:00/i)).toBeInTheDocument();
-    expect(screen.getByText(/Race readiness/i)).toBeInTheDocument();
+    // "Fitness"/"Form" goal panels duplicate the core grid — shown once only.
+    expect(screen.getAllByText("Fitness")).toHaveLength(1);
+    expect(screen.getAllByText("Form")).toHaveLength(1);
+  });
+
+  it("appends goal-unique panels to the metric grid", async () => {
+    apiFetch.mockResolvedValueOnce({
+      ...payload,
+      goal_variant: {
+        kind: "marathon",
+        panels: [
+          { label: "Fitness", value: 62, unit: "CTL", hint: "42-day load" },
+          { label: "Threshold pace", value: "4:24/km", unit: "", hint: "best recent run" },
+        ],
+      },
+    });
+    render(<DashboardView />);
+    expect(await screen.findByText("Threshold pace")).toBeInTheDocument();
+    expect(screen.getAllByText("Fitness")).toHaveLength(1);
   });
 
   it("shows the goal banner and this-week table when present", async () => {
