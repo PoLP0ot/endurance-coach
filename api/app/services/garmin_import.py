@@ -37,6 +37,15 @@ ProgressFn = Callable[[str], None]
 
 logger = logging.getLogger(__name__)
 
+# Connection status set when the stored Garmin token stops authenticating.
+CONN_AUTH_EXPIRED = "auth_expired"
+
+
+def _is_auth_failure(exc: Exception) -> bool:
+    """True when a Garmin call failed because the session token is dead."""
+    msg = str(exc).lower()
+    return "401" in msg or "unauthorized" in msg or "403" in msg or "forbidden" in msg
+
 
 def downsample(samples: Sequence, cap: int) -> list:
     """Evenly reduce a sequence to at most `cap` items, preserving order.
@@ -261,4 +270,14 @@ def run_import(
             job.error = str(exc)
             db.add(job)
             db.commit()
+        if _is_auth_failure(exc):
+            conn = db.execute(
+                select(GarminConnection).where(
+                    GarminConnection.user_id == user_id
+                )
+            ).scalar_one_or_none()
+            if conn is not None:
+                conn.status = CONN_AUTH_EXPIRED
+                db.add(conn)
+                db.commit()
         raise

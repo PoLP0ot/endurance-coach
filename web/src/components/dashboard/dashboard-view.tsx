@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { MetricCard } from "./metric-card";
 import { BriefCard } from "./brief-card";
 import { TrainingLoadChart } from "./training-load-chart";
+import { GarminStatusBanner } from "./garmin-status-banner";
 import { GoalHero } from "./goal-hero";
 import { SignalsCard } from "./signals-card";
 import { WeekGlance } from "./week-glance";
@@ -131,6 +132,7 @@ export function DashboardView() {
         )}
       </div>
       {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
+      <GarminStatusBanner />
       <GoalHero goal={data.goal} progress={data.goal_structured} />
       <TodayCard />
       <BriefCard

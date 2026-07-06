@@ -145,6 +145,59 @@ def test_run_import_reports_progress_and_completes(db_session, seed_user):
     assert job.activities_imported == 1
 
 
+def test_run_import_auth_failure_marks_connection_expired(db_session, seed_user):
+    """A dead Garmin token flags the connection so the UI can prompt reconnect."""
+
+    class _AuthFailingProvider(_FakeProvider):
+        def list_activities(self, token, since):
+            raise RuntimeError("401 Client Error: Unauthorized for url: sso")
+
+    conn = GarminConnection(
+        user_id=TEST_USER_ID, encrypted_tokens="x", status="connected"
+    )
+    job = ImportJob(user_id=TEST_USER_ID)
+    db_session.add_all([conn, job])
+    db_session.commit()
+
+    with pytest.raises(RuntimeError):
+        run_import(
+            db_session,
+            _AuthFailingProvider([], [], {}),
+            user_id=TEST_USER_ID,
+            token="token",
+            since=date(2026, 1, 1),
+            job=job,
+        )
+
+    db_session.refresh(conn)
+    assert conn.status == "auth_expired"
+    assert job.status == "error"
+
+
+def test_run_import_transient_failure_keeps_connection(db_session, seed_user):
+    class _FlakyProvider(_FakeProvider):
+        def list_activities(self, token, since):
+            raise RuntimeError("connection reset by peer")
+
+    conn = GarminConnection(
+        user_id=TEST_USER_ID, encrypted_tokens="x", status="connected"
+    )
+    db_session.add(conn)
+    db_session.commit()
+
+    with pytest.raises(RuntimeError):
+        run_import(
+            db_session,
+            _FlakyProvider([], [], {}),
+            user_id=TEST_USER_ID,
+            token="token",
+            since=date(2026, 1, 1),
+        )
+
+    db_session.refresh(conn)
+    assert conn.status == "connected"
+
+
 def test_resolve_since_uses_last_sync_when_present():
     conn = GarminConnection(
         user_id=TEST_USER_ID,
