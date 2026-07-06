@@ -61,16 +61,21 @@ supprimer ses données ✅ → pages légales publiques ✅.
 - **S9** Error tracking Sentry — nouvelle dépendance, à valider.
 - **S10** Retries ARQ sur l'import.
 
-## User-blocked avant mise en vente (hors code)
+## User-blocked avant mise en vente (hors code) — état 2026-07-07
 
-1. Compte Paddle live : price id(s), webhook secret, URL publique du webhook,
-   et vérification marchand (les pages /terms et /privacy sont maintenant là
-   pour ça).
-2. Resend : clé + domaine vérifié (DKIM/SPF) pour brief/hebdo/transactionnel.
-3. Supabase : activer la confirmation d'email.
-4. Infra : Postgres + Redis managés, deploy API (Railway/Fly, EU) + web
+1. **Paddle** (seul vrai bloquant restant) : compte + api key + client token +
+   webhook secret + price ids mensuel/annuel + URL publique du webhook.
+2. ~~Sentry~~ **FAIT** : DSN fourni, branché api (`SENTRY_DSN`) + web
+   (`NEXT_PUBLIC_SENTRY_DSN`), événement de test livré (`c062f36b…`).
+3. **Resend — clé FAITE, domaine restant** : clé « sending only » validée par
+   envoi réel (`b313a454…` via l'expéditeur sandbox onboarding@resend.dev).
+   Reste à vérifier le domaine `endurancecoach.app` sur resend.com/domains
+   (DNS DKIM/SPF) — sans ça, `EMAIL_FROM=coach@endurancecoach.app` est refusé.
+4. Supabase : câblage vérifié complet ; reste UNIQUEMENT le toggle dashboard
+   « Confirm email ».
+5. Infra : Postgres + Redis managés, deploy API (Railway/Fly, EU) + web
    (Vercel), domaine, secrets prod, HTTPS/headers.
-5. Renseigner l'entité juridique réelle dans /terms et /privacy (aujourd'hui
+6. Renseigner l'entité juridique réelle dans /terms et /privacy (aujourd'hui
    « Endurance Coach » + support@endurancecoach.app).
 
 ## Risques restants avant vente
