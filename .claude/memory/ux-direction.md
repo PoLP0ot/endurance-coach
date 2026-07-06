@@ -57,6 +57,17 @@ Series/metric colors correspond: CTL/Fitness olive, ATL/Fatigue rust, TSB taupe.
 - Skeleton loaders: pulse animation
 - Touch targets: min 44×44px
 
+### Theme & language decisions (2026-07-06 design audit)
+- **Light-only is the brand** (Direction A): warm-stone doesn't invert; a dark
+  theme requires its own "night trail" palette study — backlog D6, post-launch.
+- **English-only at launch** (Direction A): react.md's useIntl rule is a
+  documented deviation until D7; no i18n infra installed, copy stays in
+  components.
+- Motion: implemented standards = 200ms page fade (app template.tsx) + button
+  press; everything respects `prefers-reduced-motion`. No decorative motion.
+- Data-viz accessibility: series are distinguishable without color — CTL solid
+  olive, ATL dashed rust, TSB long-dash taupe.
+
 ### Forbidden
 - ❌ box-shadow on cards (hairline borders instead)
 - ❌ rounded corners > 3px
