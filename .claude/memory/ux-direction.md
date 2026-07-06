@@ -67,6 +67,16 @@ Series/metric colors correspond: CTL/Fitness olive, ATL/Fatigue rust, TSB taupe.
   press; everything respects `prefers-reduced-motion`. No decorative motion.
 - Data-viz accessibility: series are distinguishable without color — CTL solid
   olive, ATL dashed rust, TSB long-dash taupe.
+- Touch/focus floor: interactive targets ≥ 44px (Button size=icon is h-11),
+  Input + custom radios carry a focus-visible ring — border color alone is not
+  a focus indicator.
+- Import wait = ImportProgress checklist driven by real backend labels (D3);
+  never fake steps. Grid cards: last tile spans the remainder (BodyCard
+  pattern) — no trailing voids.
+- Visual QA source of truth: `web/e2e/authed.spec.ts` route sweep + state
+  sweep (`state-*.png`: MFA, cancel/won't-renew/past_due, reconnect,
+  adaptation, importing, empty chat, legal). e2e files must stay
+  self-contained — relative imports break Playwright's loader on this host.
 
 ### Forbidden
 - ❌ box-shadow on cards (hairline borders instead)

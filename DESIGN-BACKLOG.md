@@ -3,7 +3,7 @@
 La direction (palette, typo, principes, décisions dark/i18n) vit dans
 `.claude/memory/ux-direction.md` — source de vérité, mise à jour à chaque story.
 
-## D1 — Couvrir et vérifier les états jamais vus `[ ]`
+## D1 — Couvrir et vérifier les états jamais vus `[x]`
 **Problème (B1)** : MFA, annulation/won't-renew/past_due, légal, adaptation,
 reconnexion Garmin, chat vide — non couverts par le harness de capture.
 **Critères visuels** :
@@ -11,7 +11,7 @@ reconnexion Garmin, chat vide — non couverts par le harness de capture.
 - Chaque capture relue ; toute casse corrigée dans la même story.
 **Touche** : `web/e2e/*.spec.ts`, fixes éventuels dans les composants concernés.
 
-## D2 — Accessibilité : cibles, focus, daltonisme `[ ]`
+## D2 — Accessibilité : cibles, focus, daltonisme `[x]`
 **Problème (B2, B3, I3)**.
 **Critères visuels** :
 - Cibles tactiles ≥ 44 px : bouton icône (`size="icon"`), radio d'intervalle.
@@ -22,7 +22,7 @@ reconnexion Garmin, chat vide — non couverts par le harness de capture.
 **Touche** : `ui/button.tsx`, `ui/input.tsx`, `subscription-view.tsx`,
 `training-load-chart.tsx`.
 
-## D3 — Le moment d'import Garmin `[ ]`
+## D3 — Le moment d'import Garmin `[x]`
 **Problème (I1)** : spinner nu au premier moment de vérité.
 **Critères visuels** :
 - Écran d'import = checklist verticale des étapes du pipeline (Fetching
@@ -32,7 +32,7 @@ reconnexion Garmin, chat vide — non couverts par le harness de capture.
 - États gérés : erreur (message + CTA réessayer/settings), MFA inchangé.
 **Touche** : `connect-garmin.tsx` (+ petit composant d'étapes), tests vitest.
 
-## D4 — Standards d'interaction : documentés → réels `[ ]`
+## D4 — Standards d'interaction : documentés → réels `[x]`
 **Problème (I2)**.
 **Critères visuels** :
 - Fade-in de page 200 ms (template.tsx du groupe (app)), respecte
@@ -42,7 +42,7 @@ reconnexion Garmin, chat vide — non couverts par le harness de capture.
 - Aucun mouvement décoratif gratuit (interdits ux-direction respectés).
 **Touche** : `app/(app)/template.tsx` (nouveau), `globals.css`, `ui/button.tsx`.
 
-## D5 — Poids et cohérences résiduels `[ ]`
+## D5 — Poids et cohérences résiduels `[x]`
 **Problème (P1, P2, P3)**.
 **Critères visuels** :
 - « Your Body » : plus de vide en fin de grille (dernière tuile s'étend).
