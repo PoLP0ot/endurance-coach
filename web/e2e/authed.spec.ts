@@ -1,9 +1,11 @@
 import { test, type Page } from "@playwright/test";
 
 /**
- * Capture auth-gated screens with a stubbed Supabase session + stubbed FastAPI
- * responses, so the loop can visually review them against the prototype without
- * a live backend. Run: pnpm exec playwright test authed
+ * Capture auth-gated screens AND edge/flow states with a stubbed Supabase
+ * session + stubbed FastAPI responses. Self-contained on purpose: relative
+ * imports between e2e files break Playwright's loader on this host
+ * (Node 22 + Windows), so fixtures live inline.
+ * Run: pnpm exec playwright test authed
  * Output: e2e/__shots__/<name>-<project>.png
  */
 
@@ -293,7 +295,12 @@ const API_FIXTURES: Record<string, unknown> = {
   },
 };
 
-async function setupAuth(page: Page) {
+/** Stub Supabase session + FastAPI. `overrides` replace/add per-path fixtures;
+ * a value of `{ __status: N, ...body }` fulfills with that HTTP status. */
+async function setupAuth(
+  page: Page,
+  overrides: Record<string, unknown> = {},
+) {
   await page.addInitScript(
     ([ref, session]) => {
       window.localStorage.setItem(
@@ -307,18 +314,23 @@ async function setupAuth(page: Page) {
   // Stub all FastAPI calls (NEXT_PUBLIC_API_URL → :8001) with fixtures.
   await page.route("**://localhost:8001/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
-    const body = API_FIXTURES[path];
+    const body = { ...API_FIXTURES, ...overrides }[path];
     if (body === undefined) {
       await route.fulfill({ status: 404, body: JSON.stringify({ error: { message: "no fixture" } }) });
       return;
     }
+    const { __status, ...payload } =
+      typeof body === "object" && body !== null
+        ? (body as Record<string, unknown>)
+        : { __status: undefined };
     await route.fulfill({
-      status: 200,
+      status: typeof __status === "number" ? __status : 200,
       contentType: "application/json",
-      body: JSON.stringify(body),
+      body: JSON.stringify(typeof body === "object" ? payload : body),
     });
   });
 }
+
 
 const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "dashboard", path: "/dashboard" },
@@ -340,5 +352,113 @@ for (const route of AUTHED_ROUTES) {
       path: `e2e/__shots__/authed-${route.name}-${testInfo.project.name}.png`,
       fullPage: true,
     });
+  });
+}
+
+async function shoot(page: import("@playwright/test").Page, name: string, project: string) {
+  await page.waitForTimeout(400);
+  await page.screenshot({
+    path: `e2e/__shots__/state-${name}-${project}.png`,
+    fullPage: true,
+  });
+}
+
+test("garmin mfa step", async ({ page }, testInfo) => {
+  await setupAuth(page, {
+    "/garmin/connect": { __status: 409, error: { message: "garmin_mfa_required" } },
+  });
+  await page.goto("/onboarding", { waitUntil: "networkidle" });
+  await page.getByLabel(/garmin email/i).fill("marc@example.com");
+  await page.getByLabel(/garmin password/i).fill("pw");
+  await page.getByRole("button", { name: /connect garmin/i }).click();
+  await page.getByLabel(/verification code/i).waitFor();
+  await shoot(page, "garmin-mfa", testInfo.project.name);
+});
+
+test("subscription premium with cancel confirm", async ({ page }, testInfo) => {
+  await setupAuth(page, {
+    "/subscription/status": {
+      status: "active",
+      is_premium: true,
+      current_period_end: "2026-12-31T00:00:00+00:00",
+      cancel_at_period_end: false,
+    },
+  });
+  await page.goto("/settings/subscription", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /cancel subscription/i }).click();
+  await shoot(page, "subscription-cancel-confirm", testInfo.project.name);
+});
+
+test("subscription won't renew", async ({ page }, testInfo) => {
+  await setupAuth(page, {
+    "/subscription/status": {
+      status: "active",
+      is_premium: true,
+      current_period_end: "2026-12-31T00:00:00+00:00",
+      cancel_at_period_end: true,
+    },
+  });
+  await page.goto("/settings/subscription", { waitUntil: "networkidle" });
+  await shoot(page, "subscription-wont-renew", testInfo.project.name);
+});
+
+test("subscription past_due dunning banner", async ({ page }, testInfo) => {
+  await setupAuth(page, {
+    "/subscription/status": {
+      status: "past_due",
+      is_premium: true,
+      current_period_end: "2026-12-31T00:00:00+00:00",
+      cancel_at_period_end: false,
+    },
+  });
+  await page.goto("/settings/subscription", { waitUntil: "networkidle" });
+  await shoot(page, "subscription-past-due", testInfo.project.name);
+});
+
+test("dashboard garmin reconnect banner", async ({ page }, testInfo) => {
+  await setupAuth(page, {
+    "/garmin/status": { status: "auth_expired", last_sync_at: null },
+  });
+  await page.goto("/dashboard", { waitUntil: "networkidle" });
+  await shoot(page, "dashboard-reconnect", testInfo.project.name);
+});
+
+test("plan adaptation notice", async ({ page }, testInfo) => {
+  const base = API_FIXTURES["/plans/current"] as {
+    plan: { structure: { weeks: unknown[] } };
+  };
+  const today = new Date().toISOString().slice(0, 10);
+  await setupAuth(page, {
+    "/plans/current": {
+      plan: {
+        ...base.plan,
+        structure: {
+          ...base.plan.structure,
+          last_adaptation: {
+            at: today,
+            adherence_pct: 64,
+            changes: [
+              { week: 7, from: 250, to: 228 },
+              { week: 6, from: 390, to: 352 },
+            ],
+          },
+        },
+      },
+    },
+  });
+  await page.goto("/plan", { waitUntil: "networkidle" });
+  await shoot(page, "plan-adapted", testInfo.project.name);
+});
+
+test("empty coach thread with starter chips", async ({ page }, testInfo) => {
+  await setupAuth(page, { "/chat/messages": { messages: [] } });
+  await page.goto("/coach", { waitUntil: "networkidle" });
+  await shoot(page, "coach-empty", testInfo.project.name);
+});
+
+for (const path of ["terms", "privacy", "contact"]) {
+  test(`legal ${path}`, async ({ page }, testInfo) => {
+    await page.goto(`/${path}`, { waitUntil: "networkidle" });
+    await shoot(page, `legal-${path}`, testInfo.project.name);
   });
 }
