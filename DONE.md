@@ -73,8 +73,16 @@ supprimer ses données ✅ → pages légales publiques ✅.
    (DNS DKIM/SPF) — sans ça, `EMAIL_FROM=coach@endurancecoach.app` est refusé.
 4. ~~Supabase~~ **FAIT** : câblage vérifié + toggle « Confirm email » activé
    (confirmé par le fondateur 2026-07-07).
-5. Infra : Postgres + Redis managés, deploy API (Railway/Fly, EU) + web
-   (Vercel), domaine, secrets prod, HTTPS/headers.
+5. ~~Infra~~ **FAIT (2026-07-07)** : Railway (projet `welcoming-appreciation`) —
+   Postgres + Redis Online, API `endurance-coach` Online sur
+   https://endurance-coach-production-459b.up.railway.app (migrations au boot,
+   /health 200, CORS ok, 401 propre), worker ARQ (SERVICE_ROLE=worker, crons
+   enregistrés ; fix RedisSettings.from_dsn — crashloop latent depuis le début).
+   Front Vercel `endurance-coach` déployé avec la vraie NEXT_PUBLIC_API_URL.
+   Restent : désactiver la Deployment Protection Vercel (toggle dashboard,
+   refusé au garde-fou côté agent), domaine custom, et re-régler le healthcheck
+   /health du service API dans le dashboard Railway (retiré du config-as-code
+   car il tuait le worker).
 6. Renseigner l'entité juridique réelle dans /terms et /privacy (aujourd'hui
    « Endurance Coach » + support@endurancecoach.app).
 
