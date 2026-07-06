@@ -26,6 +26,7 @@ export function PlanView() {
   const [goal, setGoal] = useState<string>(GOALS[0].value);
   const [weeks, setWeeks] = useState(12);
   const [generating, setGenerating] = useState(false);
+  const [showRegen, setShowRegen] = useState(false);
   // Push-to-watch (A14): POST /plans/push uploads this week's structured workout.
   const [watch, setWatch] = useState<
     "idle" | "confirm" | "sending" | "synced" | "error"
@@ -93,13 +94,9 @@ export function PlanView() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="rounded border border-line bg-card p-5">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-ink">
-          {plan ? "Regenerate your plan" : "Build your plan"}
-        </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+  const planForm = (
+    <>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="goal">Goal</Label>
             <select
@@ -128,11 +125,27 @@ export function PlanView() {
             />
           </div>
         </div>
-        <Button className="mt-4" onClick={generate} disabled={generating}>
-          {generating && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          {generating ? "Generating…" : "Generate plan"}
-        </Button>
-      </div>
+      <Button className="mt-4" onClick={generate} disabled={generating}>
+        {generating && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+        {generating ? "Generating…" : "Generate plan"}
+      </Button>
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+      {!plan && (
+        <div className="rounded border border-line bg-card p-5">
+          <h2 className="font-display text-lg font-semibold tracking-tight text-ink">
+            Build your plan
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A periodized week-by-week structure for your goal, adapted as you
+            train.
+          </p>
+          {planForm}
+        </div>
+      )}
 
       {plan && (
         <div className="space-y-4">
@@ -207,6 +220,26 @@ export function PlanView() {
                 </Button>
               </div>
             )}
+          </section>
+
+          <section className="rounded border border-line bg-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display text-sm font-semibold text-ink">
+                  Regenerate your plan
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Start over with a different goal or horizon. Your current
+                  plan is replaced.
+                </p>
+              </div>
+              {!showRegen && (
+                <Button size="sm" variant="outline" onClick={() => setShowRegen(true)}>
+                  Regenerate
+                </Button>
+              )}
+            </div>
+            {showRegen && planForm}
           </section>
         </div>
       )}
