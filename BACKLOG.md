@@ -3,7 +3,7 @@
 Ordonné par impact business / effort. Les bloquants du parcours payant d'abord.
 Une story = un commit. QA gate obligatoire entre chaque.
 
-## S1 — Pages légales + liens footer réels `[ ]`
+## S1 — Pages légales + liens footer réels `[x]`
 **Problème** : liens footer `/privacy`, `/terms`, `/contact` morts ; Paddle exige
 des CGV et une politique de confidentialité publiques ; l'app traite des données
 de santé (obligation RGPD).
