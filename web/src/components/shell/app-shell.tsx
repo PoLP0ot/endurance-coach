@@ -6,7 +6,7 @@ import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { NAV_ITEMS, isActiveRoute } from "./nav-items";
+import { MOBILE_NAV_ITEMS, NAV_ITEMS, isActiveRoute } from "./nav-items";
 
 /**
  * Authenticated app shell (US10): a desktop sidebar (≥1024px) and a mobile
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 px-4 py-6 pb-24 lg:px-8 lg:pb-8">{children}</main>
 
         <nav className="fixed inset-x-0 bottom-0 z-10 grid h-[62px] grid-cols-4 border-t border-line bg-card/95 backdrop-blur lg:hidden">
-          {NAV_ITEMS.map((item) => {
+          {MOBILE_NAV_ITEMS.map((item) => {
             const active = isActiveRoute(pathname, item.href);
             const Icon = item.icon;
             return (

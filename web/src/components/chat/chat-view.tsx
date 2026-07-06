@@ -18,6 +18,14 @@ import { Input } from "@/components/ui/input";
 
 type Phase = "loading" | "error" | "premium" | "ready";
 
+/** Grounded conversation starters shown while the thread is empty. */
+const STARTERS = [
+  "What should I do today?",
+  "Am I on track for my goal?",
+  "How is my recovery?",
+  "Was my last session any good?",
+] as const;
+
 /** Conversational coach (US4): grounded chat with optimistic send (premium). */
 export function ChatView() {
   const [phase, setPhase] = useState<Phase>("loading");
@@ -46,9 +54,8 @@ export function ChatView() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
-  const send = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const text = draft.trim();
+  const sendText = async (raw: string) => {
+    const text = raw.trim();
     if (!text || sending) return;
     setDraft("");
     setSending(true);
@@ -83,6 +90,11 @@ export function ChatView() {
     } finally {
       setSending(false);
     }
+  };
+
+  const send = (event: React.FormEvent) => {
+    event.preventDefault();
+    void sendText(draft);
   };
 
   if (phase === "loading") return <LoadingState rows={4} label="Loading your coach" />;
@@ -122,9 +134,25 @@ export function ChatView() {
 
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {messages.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Ask your coach anything — training, recovery, or your next session.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Ask your coach anything — training, recovery, or your next
+              session.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {STARTERS.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => void sendText(q)}
+                  disabled={sending}
+                  className="rounded-full border border-line bg-card px-3.5 py-2 text-[13px] text-ink-soft transition-colors hover:border-primary hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
         {messages.map((m) => (
           <div
