@@ -1,4 +1,4 @@
-"""Import job retry semantics (S10): transient failures retry, auth doesn't."""
+"""Import job retry semantics (S10) + worker settings sanity."""
 from __future__ import annotations
 
 import pytest
@@ -6,9 +6,15 @@ from app.core.security import encrypt
 from app.jobs import worker
 from app.models.garmin import GarminConnection
 from app.models.import_job import ImportJob
+from arq.connections import RedisSettings
 from arq.worker import Retry
 
 from tests.conftest import TEST_USER_ID
+
+
+def test_worker_redis_settings_is_parsed_dsn():
+    """arq needs a RedisSettings object; a bare URL string crashes at boot."""
+    assert isinstance(worker.WorkerSettings.redis_settings, RedisSettings)
 
 
 def _seed(db_session):

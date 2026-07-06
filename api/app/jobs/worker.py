@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import date
 
 from arq import cron
+from arq.connections import RedisSettings
 from arq.worker import Retry
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -208,4 +209,4 @@ class WorkerSettings:
         cron(send_weekly_emails, weekday="mon", hour=7, minute=0),  # Mon 07:00
         cron(adapt_all_plans, weekday="sun", hour=18, minute=0),  # weekly adaptation
     ]
-    redis_settings = settings.redis_url
+    redis_settings = RedisSettings.from_dsn(settings.redis_url)
