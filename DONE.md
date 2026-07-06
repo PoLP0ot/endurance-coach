@@ -71,8 +71,8 @@ supprimer ses données ✅ → pages légales publiques ✅.
    envoi réel (`b313a454…` via l'expéditeur sandbox onboarding@resend.dev).
    Reste à vérifier le domaine `endurancecoach.app` sur resend.com/domains
    (DNS DKIM/SPF) — sans ça, `EMAIL_FROM=coach@endurancecoach.app` est refusé.
-4. Supabase : câblage vérifié complet ; reste UNIQUEMENT le toggle dashboard
-   « Confirm email ».
+4. ~~Supabase~~ **FAIT** : câblage vérifié + toggle « Confirm email » activé
+   (confirmé par le fondateur 2026-07-07).
 5. Infra : Postgres + Redis managés, deploy API (Railway/Fly, EU) + web
    (Vercel), domaine, secrets prod, HTTPS/headers.
 6. Renseigner l'entité juridique réelle dans /terms et /privacy (aujourd'hui
