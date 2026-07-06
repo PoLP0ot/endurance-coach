@@ -74,4 +74,31 @@
   .font-data {
     @apply font-mono tabular-nums;
   }
+
+  /* Page fade-in (ux-direction: 200ms). A 2px rise keeps it felt, not seen. */
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-page-in {
+    animation: page-in 200ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-page-in {
+      animation: none;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
