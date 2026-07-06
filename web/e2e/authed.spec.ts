@@ -50,6 +50,13 @@ const API_FIXTURES: Record<string, unknown> = {
     goal_band: "on_track",
     headline: "Projected finish 3:28:00",
   },
+  "/coach/brief": {
+    day: "2026-06-24",
+    headline: "Interval day — you're fresh enough to hit it.",
+    body: "Recovery came back at 74 overnight and yesterday stayed easy, so today's 6×1 km at threshold lands on fresh legs. Lock in the paces from Tuesday and let the last two reps hurt a little.",
+    prescription: null,
+    model: "gpt-4o-mini",
+  },
   "/dashboard": {
     goal: {
       race_name: "Paris Marathon",

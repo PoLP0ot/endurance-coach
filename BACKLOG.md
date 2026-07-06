@@ -52,7 +52,7 @@ d'erreur), tests des deux côtés.
 `models/subscription.py`, migration 0011, `subscription-view.tsx`, tests.
 **Dépendances** : aucune (paddle_api_key déjà en config ; httpx déjà présent).
 
-## S4 — Brief quotidien visible sur le dashboard `[ ]`
+## S4 — Brief quotidien visible sur le dashboard `[x]`
 **Problème** : le brief coach (LLM, généré chaque matin à 05:30 pour les premium)
 n'est affiché nulle part — la boucle de rétention est construite mais débranchée.
 **Critères d'acceptation** :

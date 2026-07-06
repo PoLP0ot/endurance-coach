@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "./metric-card";
-import { CoachNote } from "./coach-note";
+import { BriefCard } from "./brief-card";
 import { TrainingLoadChart } from "./training-load-chart";
 import { GoalHero } from "./goal-hero";
 import { SignalsCard } from "./signals-card";
@@ -133,7 +133,9 @@ export function DashboardView() {
       {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
       <GoalHero goal={data.goal} progress={data.goal_structured} />
       <TodayCard />
-      <CoachNote headline={data.form.headline} detail={data.form.detail} />
+      <BriefCard
+        fallback={{ headline: data.form.headline, detail: data.form.detail }}
+      />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard
           label="Fitness"
