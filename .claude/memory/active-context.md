@@ -1,6 +1,18 @@
 # Active Context
 
-## Current Phase: BUILD (feature stories)
+## Current Phase: PRODUCTIZATION (sellable product)
+
+### Productization loop (2026-07-06) — AUDIT.md → BACKLOG.md → S1–S5 shipped
+Business audit + prioritized backlog at repo root (AUDIT.md, BACKLOG.md, DONE.md).
+Shipped with full QA gates (104 pytest, 73 vitest, ruff/eslint/build green):
+- **S1 legal**: real `/terms` `/privacy` `/contact` (LegalShell) — Paddle-approval + GDPR prerequisite; footer links were dead.
+- **S2 Garmin MFA**: provider login via `garth.sso.login(return_on_mfa=True)` (garminconnect 0.2.25 can't resume); `POST /garmin/mfa`; pending challenges in `services/garmin_mfa.py` (in-process, TTL 300 s, single-instance); onboarding UI has a code step + distinct 401/423 messages.
+- **S3 billing**: `POST /subscription/cancel` (Paddle API, injected canceller dep), `cancel_at_period_end` col (migration 0011) mirrored from webhook `scheduled_change`; **past_due now keeps premium** (dunning grace, D1-A); UI cancel confirm + payment-failed banner.
+- **S4 brief**: BriefCard on dashboard replaces CoachNote when `GET /coach/brief` succeeds; fallback (free/402/error) keeps the weekly assessment — one narrative always.
+- **S5 rate limiting**: `core/ratelimit.py` per-user sliding window (chat 20/min, garmin_login 5/5min, plans 5/h), 429+Retry-After, `rate_limit_enabled=False` autouse in tests.
+Remaining backlog: S6 reconnect banner, S7 annual price, S8 adaptation notice, S9 Sentry (new dep — needs approval), S10 ARQ retries. User-blocked launch items in DONE.md.
+
+## Previous Phase: BUILD (feature stories)
 
 **Status:** Story 0 committed (scaffold + CI green: pytest, ruff, eslint, vitest, next build all pass). US7a landing page committed.
 
