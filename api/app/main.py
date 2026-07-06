@@ -16,6 +16,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.core.monitoring import init_sentry
 from app.routers import (
     activities,
     chat,
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     configure_logging(
         settings.log_level, json_logs=settings.environment != "development"
     )
+    init_sentry()
     request_logger = logging.getLogger("app.request")
 
     app = FastAPI(

@@ -24,6 +24,12 @@
 - pytest + pytest-asyncio + httpx (tests)
 - Ruff (lint)
 
+## Monitoring (S9, user-approved 2026-07-06)
+- api: `sentry-sdk[fastapi]` via `core/monitoring.init_sentry()` (app + ARQ worker startup)
+- web: `@sentry/nextjs` via `src/instrumentation.ts` + `instrumentation-client.ts` + root `sentry.*.config.ts`
+- Inert until `SENTRY_DSN` (api) / `NEXT_PUBLIC_SENTRY_DSN` (web) are set; `send_default_pii=False`, request bodies never sent, no session replay (health data)
+- No `withSentryConfig` wrapping — source-map upload needs a Sentry auth token (user-side)
+
 ## Infrastructure
 - Vercel (frontend hosting)
 - Railway or Fly.io (backend, EU region)

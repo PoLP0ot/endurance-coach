@@ -22,9 +22,14 @@ S6–S8 et S10 livrées à leur tour (5 commits de plus, mêmes QA gates —
   `anthropic` et `paddle-billing-client` retirés de requirements (importés
   nulle part).
 
-Seule reste au backlog **S9 (Sentry)** — nouvelle dépendance, à valider
-explicitement. Le risque « écart CLAUDE.md/LLM » est résolu ; les autres
-risques et items user-blocked ci-dessous restent valides.
+**S9 (Sentry) livrée après validation explicite de la dépendance** :
+`sentry-sdk[fastapi]` (API + worker ARQ via `core/monitoring.init_sentry`) et
+`@sentry/nextjs` (instrumentation Next 15). Inerte sans `SENTRY_DSN` /
+`NEXT_PUBLIC_SENTRY_DSN` ; PII et corps de requêtes jamais envoyés, pas de
+session replay (données de santé). Il reste à créer le projet Sentry et
+fournir les deux DSN. Le backlog code est donc **entièrement livré (S1–S10)**.
+Supabase vérifié câblé localement (URL/JWT/clés publiques présents) — seul le
+toggle « email confirmation » du dashboard reste à activer.
 
 
 ## Livré (6 commits, chaque story passée au QA gate complet)

@@ -15,6 +15,7 @@ resend==2.5.1
 pydantic==2.10.4
 pydantic-settings==2.7.1
 cryptography==44.0.0
+sentry-sdk[fastapi]==2.64.0
 
 # Testing / lint
 pytest==8.3.4

@@ -95,7 +95,7 @@ marquée, dashboard affiche un bandeau avec CTA vers /onboarding ; vitest+pytest
 du lundi le mentionne (fact déterministe, le LLM narre).
 **Dépendances** : S4.
 
-## S9 — Error tracking (Sentry) `[ ]`
+## S9 — Error tracking (Sentry) `[x]`
 **Nouvelle dépendance — à valider explicitement avant.** sentry-sdk (api) +
 @sentry/nextjs (web), DSN par env, sampling léger.
 

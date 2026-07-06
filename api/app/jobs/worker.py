@@ -181,8 +181,17 @@ async def generate_daily_briefs(ctx: dict) -> dict:
         db.close()
 
 
+async def startup(ctx: dict) -> None:
+    """Worker startup: share the API's Sentry wiring (no-op without DSN)."""
+    from app.core.monitoring import init_sentry
+
+    init_sentry()
+
+
 class WorkerSettings:
     """ARQ worker configuration. Run with: arq app.jobs.worker.WorkerSettings"""
+
+    on_startup = startup
 
     functions = [
         import_garmin_activities,

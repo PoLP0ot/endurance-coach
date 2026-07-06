@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     paddle_price_id_annual: str = ""
     paddle_environment: str = "sandbox"
 
+    # Monitoring (S9) — Sentry is a no-op until a DSN is provided.
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.1
+
     # Security
     encryption_key: str = ""
     # Per-user sliding-window rate limits (in-process; see core/ratelimit.py)
