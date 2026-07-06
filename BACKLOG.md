@@ -64,7 +64,7 @@ n'est affiché nulle part — la boucle de rétention est construite mais débra
 `dashboard-view.tsx`, `schemas/brief.ts`, tests.
 **Dépendances** : aucune.
 
-## S5 — Rate limiting endpoints sensibles `[ ]`
+## S5 — Rate limiting endpoints sensibles `[x]`
 **Problème** : `/chat` (coût LLM/req), `/garmin/connect` (stuffing → blocage IP
 Garmin), `/plans` (LLM) sans aucune limite.
 **Critères d'acceptation** :

@@ -48,6 +48,11 @@ class Settings(BaseSettings):
 
     # Security
     encryption_key: str = ""
+    # Per-user sliding-window rate limits (in-process; see core/ratelimit.py)
+    rate_limit_enabled: bool = True
+    rate_limit_chat_per_min: int = 20
+    rate_limit_garmin_per_5min: int = 5
+    rate_limit_plans_per_hour: int = 5
 
     @property
     def cors_origin_list(self) -> list[str]:

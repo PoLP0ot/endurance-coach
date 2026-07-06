@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user
+from app.core.ratelimit import rate_limit
 from app.core.security import decrypt, encrypt
 from app.jobs.queue import enqueue_garmin_import
 from app.models.garmin import GarminConnection
@@ -89,7 +90,11 @@ def _queue_import(db: Session, user_id: str) -> ImportJob:
     return job
 
 
-@router.post("/connect", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/connect",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(rate_limit("garmin_login"))],
+)
 async def connect(
     body: ConnectRequest,
     user: CurrentUser = Depends(get_current_user),
@@ -137,7 +142,11 @@ async def connect(
     return {"job_id": job.id, "status": job.status}
 
 
-@router.post("/mfa", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/mfa",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(rate_limit("garmin_login"))],
+)
 async def connect_mfa(
     body: MFARequest,
     user: CurrentUser = Depends(get_current_user),

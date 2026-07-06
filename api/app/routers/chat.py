@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import get_llm_provider, require_premium
+from app.core.ratelimit import rate_limit
 from app.models.chat import ChatMessage
 from app.models.user import User
 from app.services.chat import answer, history
@@ -38,7 +39,7 @@ async def get_messages(
     return {"messages": [_serialize(m) for m in history(db, user.id)]}
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(rate_limit("chat"))])
 async def post_message(
     body: ChatRequest,
     user: User = Depends(require_premium),

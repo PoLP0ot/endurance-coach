@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import get_llm_provider, require_premium
+from app.core.ratelimit import rate_limit
 from app.models.plan import TrainingPlan
 from app.models.user import User
 from app.routers.garmin import get_garmin_provider
@@ -40,7 +41,11 @@ def _serialize(plan: TrainingPlan) -> dict:
     }
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("plans"))],
+)
 async def generate_plan(
     body: PlanRequest,
     user: User = Depends(require_premium),

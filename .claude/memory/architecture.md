@@ -38,6 +38,13 @@ Garmin import → credentials encrypted at rest → ARQ job → Activity + Healt
 - `GET /email/weekly/preview` (premium)
 - GDPR: `GET /gdpr/export`, `DELETE /gdpr/account`
 
+## Rate limiting (S5)
+`app/core/ratelimit.py` — per-user sliding window in process memory (no new
+dep, single-instance assumption). Scopes: chat 20/min, garmin_login 5/5 min
+(connect + mfa share a bucket), plans 5/h — tunable via settings
+(`rate_limit_*`), `rate_limit_enabled` off in tests (autouse conftest fixture).
+429 + `Retry-After`; error envelope preserves headers.
+
 ## Deterministic vs LLM split
 AnalyticsEngine + service layer compute ALL numbers (dashboard, activity facts, plan periodization, weekly-email facts). The LLM (`LLMProvider`, injected via `deps.get_llm_provider`, stubbed in tests) only narrates: activity analysis, chat replies, plan rationale, weekly-email prose. Services take a `_Narrator` protocol so the Anthropic SDK is import-lazy and never loaded in tests.
 

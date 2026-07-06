@@ -26,6 +26,12 @@ TEST_USER_ID = "11111111-1111-1111-1111-111111111111"
 TEST_USER_EMAIL = "athlete@example.com"
 
 
+@pytest.fixture(autouse=True)
+def _rate_limit_off(monkeypatch):
+    """Rate limiting stays out of unrelated tests; dedicated tests re-enable it."""
+    monkeypatch.setattr(settings, "rate_limit_enabled", False)
+
+
 @pytest.fixture()
 def client() -> TestClient:
     """Plain client with real auth (for health/auth tests)."""
