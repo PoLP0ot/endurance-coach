@@ -32,8 +32,10 @@
 ## Subscription Tiers
 
 - **Free:** Dashboard, last 30 days, basic metrics
-- **Premium ($8/mo):** Full history, AI chat unlimited, AI activity analysis, training plans, weekly email
+- **Premium ($8/mo):** Full history, AI chat unlimited, AI activity analysis, training plans, weekly email, daily brief
 - All enforced server-side via `require_premium` dependency
+- **Dunning (D1-A):** `past_due` keeps premium during Paddle's retry window (UI shows a payment-failed banner); only `canceled`/`paused` downgrade to free
+- **Cancellation:** `POST /subscription/cancel` → Paddle API cancel at period end; `cancel_at_period_end` mirrored from webhook `scheduled_change` (migration 0011); access continues until `current_period_end`
 
 ## GDPR Requirements
 - Data residency: EU (Supabase eu-central-1)

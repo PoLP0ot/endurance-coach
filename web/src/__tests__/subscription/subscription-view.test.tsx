@@ -9,7 +9,9 @@ const { apiFetch, getAccessToken } = vi.hoisted(() => ({
 
 vi.mock("@/lib/api", () => ({ apiFetch }));
 vi.mock("@/lib/session", () => ({ getAccessToken }));
-vi.mock("sonner", () => ({ toast: { info: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({
+  toast: { info: vi.fn(), error: vi.fn(), success: vi.fn() },
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -25,6 +27,64 @@ describe("SubscriptionView (US8)", () => {
     });
     render(<SubscriptionView />);
     expect(await screen.findByText(/you're on premium/i)).toBeInTheDocument();
+  });
+
+  it("cancels at period end after confirmation", async () => {
+    apiFetch
+      .mockResolvedValueOnce({
+        status: "active",
+        is_premium: true,
+        current_period_end: "2026-12-31T00:00:00+00:00",
+        cancel_at_period_end: false,
+      })
+      .mockResolvedValueOnce({
+        status: "active",
+        cancel_at_period_end: true,
+        current_period_end: "2026-12-31T00:00:00+00:00",
+      });
+    render(<SubscriptionView />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /cancel subscription/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /yes, cancel/i }),
+    );
+
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith(
+        "/subscription/cancel",
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
+    expect(await screen.findByText(/won't renew/i)).toBeInTheDocument();
+  });
+
+  it("shows the scheduled-cancellation state without a cancel button", async () => {
+    apiFetch.mockResolvedValueOnce({
+      status: "active",
+      is_premium: true,
+      current_period_end: "2026-12-31T00:00:00+00:00",
+      cancel_at_period_end: true,
+    });
+    render(<SubscriptionView />);
+    expect(await screen.findByText(/won't renew/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /cancel subscription/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("warns when a payment failed (past_due grace)", async () => {
+    apiFetch.mockResolvedValueOnce({
+      status: "past_due",
+      is_premium: true,
+      current_period_end: "2026-12-31T00:00:00+00:00",
+      cancel_at_period_end: false,
+    });
+    render(<SubscriptionView />);
+    expect(
+      await screen.findByText(/last payment failed/i),
+    ).toBeInTheDocument();
   });
 
   it("offers an upgrade and starts checkout for free users", async () => {

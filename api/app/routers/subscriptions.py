@@ -1,7 +1,8 @@
-"""Subscription status, checkout config, and Paddle webhook (US8)."""
+"""Subscription status, checkout config, cancel, and Paddle webhook (US8, S3)."""
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
@@ -15,10 +16,18 @@ from app.models.user import User
 from app.services.subscriptions import (
     apply_webhook_event,
     is_premium,
+    request_paddle_cancellation,
     verify_paddle_signature,
 )
 
 router = APIRouter(prefix="/subscription", tags=["subscription"])
+
+PaddleCanceller = Callable[[str], dict]
+
+
+def get_paddle_canceller() -> PaddleCanceller:
+    """Paddle cancellation call (overridden in tests)."""
+    return request_paddle_cancellation
 
 
 @router.get("/status")
@@ -38,6 +47,45 @@ async def subscription_status(
             sub.current_period_end.isoformat()
             if sub and sub.current_period_end
             else None
+        ),
+        "cancel_at_period_end": bool(sub and sub.cancel_at_period_end),
+    }
+
+
+@router.post("/cancel")
+async def cancel_subscription(
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    cancel: PaddleCanceller = Depends(get_paddle_canceller),
+) -> dict:
+    """Cancel at period end via the Paddle API. Access continues until then."""
+    if not settings.paddle_api_key:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "billing_not_configured"
+        )
+    sub = db.execute(
+        select(Subscription).where(Subscription.user_id == user.id)
+    ).scalars().first()
+    db_user = db.get(User, user.id)
+    if (
+        sub is None
+        or sub.paddle_subscription_id is None
+        or not is_premium(db_user)
+    ):
+        raise HTTPException(status.HTTP_409_CONFLICT, "no_active_subscription")
+    try:
+        cancel(sub.paddle_subscription_id)
+    except Exception as exc:  # noqa: BLE001 — httpx errors map to a clean 502
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "paddle_error") from exc
+    # The webhook will confirm, but reflect the intent immediately so the UI
+    # doesn't depend on webhook latency.
+    sub.cancel_at_period_end = True
+    db.commit()
+    return {
+        "status": db_user.subscription_status,
+        "cancel_at_period_end": True,
+        "current_period_end": (
+            sub.current_period_end.isoformat() if sub.current_period_end else None
         ),
     }
 

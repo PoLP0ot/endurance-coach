@@ -65,3 +65,34 @@ def test_webhook_cancel_downgrades(db_session, seed_user):
 
 def test_webhook_ignores_non_subscription_events(db_session, seed_user):
     assert apply_webhook_event(db_session, {"event_type": "transaction.completed"}) is None
+
+
+def test_past_due_keeps_premium_during_dunning(db_session, seed_user):
+    """A failed charge must not lock out a paying athlete while Paddle retries."""
+    apply_webhook_event(db_session, _event("active"))
+    apply_webhook_event(db_session, _event("past_due"))
+    user = db_session.get(type(seed_user), TEST_USER_ID)
+    assert user.subscription_status == "past_due"
+    assert is_premium(user)
+
+
+def test_paused_downgrades(db_session, seed_user):
+    apply_webhook_event(db_session, _event("active"))
+    apply_webhook_event(db_session, _event("paused"))
+    user = db_session.get(type(seed_user), TEST_USER_ID)
+    assert not is_premium(user)
+
+
+def test_scheduled_cancel_sets_flag_and_clears_on_resume(db_session, seed_user):
+    event = _event("active")
+    event["data"]["scheduled_change"] = {
+        "action": "cancel",
+        "effective_at": "2026-12-31T00:00:00Z",
+    }
+    sub = apply_webhook_event(db_session, event)
+    assert sub.cancel_at_period_end is True
+    # Athlete resumes: Paddle sends the update with scheduled_change null.
+    resumed = _event("active")
+    resumed["data"]["scheduled_change"] = None
+    sub = apply_webhook_event(db_session, resumed)
+    assert sub.cancel_at_period_end is False

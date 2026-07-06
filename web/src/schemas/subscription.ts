@@ -4,6 +4,7 @@ export const subscriptionStatusSchema = z.object({
   status: z.string(),
   is_premium: z.boolean(),
   current_period_end: z.string().nullable(),
+  cancel_at_period_end: z.boolean().default(false),
 });
 
 export const checkoutConfigSchema = z.object({

@@ -34,7 +34,7 @@ toutes les erreurs de connexion sont écrasées en un message générique.
 d'erreur), tests des deux côtés.
 **Dépendances** : aucune.
 
-## S3 — Annulation d'abonnement + grace period dunning `[ ]`
+## S3 — Annulation d'abonnement + grace period dunning `[x]`
 **Problème** : « cancel anytime » affiché mais aucune annulation possible ;
 `past_due` downgrade immédiatement un client payant pendant les retries Paddle.
 **Critères d'acceptation** :

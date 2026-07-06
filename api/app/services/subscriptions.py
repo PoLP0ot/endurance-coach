@@ -11,17 +11,48 @@ from sqlalchemy.orm import Session
 from app.models.subscription import Subscription
 from app.models.user import User
 
-# Subscription statuses that unlock premium features.
-PREMIUM_STATUSES = frozenset({"premium", "active", "trialing"})
+# Subscription statuses that unlock premium features. past_due keeps access
+# during Paddle's dunning/retry window — a failed charge must not lock out a
+# paying athlete; only canceled/paused downgrade (audit D1-A).
+PREMIUM_STATUSES = frozenset({"premium", "active", "trialing", "past_due"})
 # Free-tier history window (days).
 FREE_HISTORY_DAYS = 30
 # Paddle statuses we treat as no-longer-premium.
-INACTIVE_STATUSES = frozenset({"canceled", "paused", "past_due"})
+INACTIVE_STATUSES = frozenset({"canceled", "paused"})
+
+# Paddle REST API hosts per environment (server-side subscription management).
+PADDLE_API_BASE = {
+    "sandbox": "https://sandbox-api.paddle.com",
+    "production": "https://api.paddle.com",
+}
 
 
 def is_premium(user: User | None) -> bool:
     """True when the user's subscription unlocks premium features."""
     return user is not None and user.subscription_status in PREMIUM_STATUSES
+
+
+def request_paddle_cancellation(paddle_subscription_id: str) -> dict:
+    """Ask Paddle to cancel a subscription at the end of the billing period.
+
+    Returns Paddle's subscription payload. Raises httpx.HTTPStatusError on a
+    non-2xx response — callers map it to a 502.
+    """
+    import httpx
+
+    from app.core.config import settings
+
+    base = PADDLE_API_BASE.get(
+        settings.paddle_environment, PADDLE_API_BASE["sandbox"]
+    )
+    resp = httpx.post(
+        f"{base}/subscriptions/{paddle_subscription_id}/cancel",
+        headers={"Authorization": f"Bearer {settings.paddle_api_key}"},
+        json={"effective_from": "next_billing_period"},
+        timeout=15.0,
+    )
+    resp.raise_for_status()
+    return resp.json().get("data", {})
 
 
 def verify_paddle_signature(secret: str, raw_body: bytes, header: str | None) -> bool:
@@ -90,6 +121,8 @@ def apply_webhook_event(db: Session, event: dict) -> Subscription | None:
     if items:
         sub.price_id = (items[0].get("price") or {}).get("id")
     sub.current_period_end = _parse_period_end(data)
+    scheduled = data.get("scheduled_change") or {}
+    sub.cancel_at_period_end = scheduled.get("action") == "cancel"
 
     user = db.get(User, user_id)
     if user is not None:

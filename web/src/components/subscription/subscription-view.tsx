@@ -38,6 +38,8 @@ export function SubscriptionView() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [upgrading, setUpgrading] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   const load = useCallback(async () => {
     setPhase("loading");
@@ -82,6 +84,26 @@ export function SubscriptionView() {
     }
   };
 
+  const cancelSubscription = async () => {
+    setCanceling(true);
+    try {
+      const token = await getAccessToken();
+      await apiFetch<unknown>("/subscription/cancel", {
+        method: "POST",
+        token,
+      });
+      setStatus((prev) =>
+        prev ? { ...prev, cancel_at_period_end: true } : prev,
+      );
+      setConfirmingCancel(false);
+      toast.success("Your subscription won't renew.");
+    } catch {
+      toast.error("We couldn't cancel your subscription. Please try again.");
+    } finally {
+      setCanceling(false);
+    }
+  };
+
   if (phase === "loading") {
     return <LoadingState rows={3} label="Loading your subscription" />;
   }
@@ -95,14 +117,71 @@ export function SubscriptionView() {
   }
 
   if (status.is_premium) {
+    const periodEnd = status.current_period_end
+      ? new Date(status.current_period_end).toLocaleDateString()
+      : null;
     return (
-      <div className="rounded border border-line bg-card p-6">
-        <p className="font-display text-lg font-semibold">You&apos;re on Premium</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {status.current_period_end
-            ? `Renews ${new Date(status.current_period_end).toLocaleDateString()}.`
-            : "Thanks for supporting your training."}
-        </p>
+      <div className="space-y-4">
+        {status.status === "past_due" && (
+          <div
+            role="alert"
+            className="rounded border border-destructive/40 bg-card p-4 text-sm text-ink-soft"
+          >
+            <span className="font-semibold text-destructive">
+              Your last payment failed.
+            </span>{" "}
+            You keep premium access while the charge is retried — check the
+            payment-update email from Paddle, our billing partner.
+          </div>
+        )}
+        <div className="rounded border border-line bg-card p-6">
+          <p className="font-display text-lg font-semibold">You&apos;re on Premium</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {status.cancel_at_period_end
+              ? `Your subscription won't renew — premium ends ${periodEnd ?? "at the end of the paid period"}.`
+              : periodEnd
+                ? `Renews ${periodEnd}.`
+                : "Thanks for supporting your training."}
+          </p>
+          {!status.cancel_at_period_end && (
+            <div className="mt-5 border-t border-line pt-4">
+              {!confirmingCancel ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmingCancel(true)}
+                >
+                  Cancel subscription
+                </Button>
+              ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-ink-soft">
+                    You&apos;ll keep premium until{" "}
+                    {periodEnd ?? "the end of the paid period"}. Cancel?
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={cancelSubscription}
+                      disabled={canceling}
+                    >
+                      {canceling ? "Canceling…" : "Yes, cancel"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setConfirmingCancel(false)}
+                      disabled={canceling}
+                    >
+                      Keep premium
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }

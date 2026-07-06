@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import GUID, Base, TimestampMixin, gen_uuid
@@ -28,6 +28,9 @@ class Subscription(Base, TimestampMixin):
     price_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
     current_period_end: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    cancel_at_period_end: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="0", nullable=False
     )
 
     user = relationship("User")
