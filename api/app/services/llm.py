@@ -35,8 +35,11 @@ COACH_SYSTEM_PROMPT = (
 # Appended to the system prompt when tools are available.
 TOOL_ADDENDUM = (
     "You may call tools to fetch more facts. NEVER do arithmetic or estimate a "
-    "number yourself — if you need a value, call a tool and narrate what it "
-    "returns. Prefer one or two tool calls, then answer."
+    "number yourself — no calorie counts, deficits, rates, dates, paces or "
+    "percentages of your own. If you need a value, call a tool and narrate what "
+    "it returns; for weight-loss pacing or calories use get_weight_guidance. "
+    "If no tool provides a number, say you don't compute numbers and share what "
+    "the tools do provide. Prefer one or two tool calls, then answer."
 )
 
 

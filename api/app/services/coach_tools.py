@@ -59,6 +59,18 @@ TOOL_SPECS = [
     {
         "type": "function",
         "function": {
+            "name": "get_weight_guidance",
+            "description": (
+                "Deterministic weight-loss pacing: required kg/week for the "
+                "athlete's deadline, weekly calorie deficit equivalents, healthy "
+                "rate window. ALWAYS use this for any calorie or pacing question."
+            ),
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_strength_progress",
             "description": (
                 "The athlete's strength program status: current week, sessions "
@@ -156,7 +168,52 @@ def run_tool(
         from app.services.strength_progress import strength_facts
 
         return strength_facts(db, user_id, today)
+    if name == "get_weight_guidance":
+        return _weight_guidance(db, user_id, today)
     return {"error": f"unknown_tool:{name}"}
+
+
+# Energy density of body fat — the ONLY calorie constant the coach may cite.
+KCAL_PER_KG_FAT = 7700
+
+
+def _weight_guidance(db: Session, user_id: str, today: date) -> dict:
+    """Deterministic weight-loss pacing derived from the goal engine."""
+    goal = build_coach_facts(db, user_id, today)["goal"]
+    if goal.get("kind") != "weight_loss":
+        return {"status": "not_weight_loss_goal", "goal_kind": goal.get("kind")}
+    current, target = goal.get("current"), goal.get("target")
+    if current is None or target is None:
+        return {
+            "status": "missing_data",
+            "hint": "needs a target weight and at least two weigh-ins",
+            "current_weight_kg": current,
+            "target_weight_kg": target,
+        }
+
+    out = {
+        "status": "ok",
+        "current_weight_kg": current,
+        "target_weight_kg": target,
+        "to_lose_kg": round(current - target, 1),
+        "target_date": goal.get("target_date"),
+        "eta": goal.get("eta"),
+        "on_track_band": goal.get("on_track_band"),
+        "current_rate_kg_per_week": goal.get("rate_kg_per_week"),
+        "required_rate_kg_per_week": goal.get("required_rate_kg_per_week"),
+        "kcal_per_kg": KCAL_PER_KG_FAT,
+        "healthy_rate_kg_per_week": [0.25, 1.0],
+    }
+    required = goal.get("required_rate_kg_per_week")
+    if required is not None:
+        out["weekly_kcal_deficit_needed"] = round(required * KCAL_PER_KG_FAT)
+    rate = goal.get("rate_kg_per_week")
+    if rate is not None and rate < 0:
+        out["weekly_kcal_deficit_at_current_rate"] = round(-rate * KCAL_PER_KG_FAT)
+    if goal.get("target_date"):
+        days = (date.fromisoformat(goal["target_date"]) - today).days
+        out["weeks_remaining"] = round(days / 7, 1)
+    return out
 
 
 def _propose_strength_plan(

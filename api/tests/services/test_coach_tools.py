@@ -81,3 +81,44 @@ def test_propose_strength_plan_rejects_bad_params(db_session, seed_user):
         {"frequency": 9, "weeks": 8, "level": "beginner", "equipment": ["body weight"]},
     )
     assert "error" in out
+
+
+def _weigh_ins(db_session, user_id, *, start_kg=90.0, days=15, per_day=0.05):
+    from app.models.health import DailyHealth
+
+    for i in range(days):
+        db_session.add(
+            DailyHealth(
+                user_id=user_id,
+                day=TODAY - timedelta(days=days - 1 - i),
+                weight_kg=round(start_kg - per_day * i, 2),
+            )
+        )
+    db_session.commit()
+
+
+def test_weight_guidance_computes_deterministic_numbers(db_session, seed_user):
+    seed_user.primary_goal = "weight_loss"
+    seed_user.goal_params = {
+        "target_weight_kg": 80.0,
+        "target_date": (TODAY + timedelta(days=140)).isoformat(),
+    }
+    db_session.commit()
+    _weigh_ins(db_session, seed_user.id)
+
+    out = run_tool(db_session, seed_user.id, TODAY, "get_weight_guidance", {})
+    assert out["status"] == "ok"
+    assert out["kcal_per_kg"] == 7700
+    assert out["required_rate_kg_per_week"] is not None
+    assert out["weekly_kcal_deficit_needed"] == round(
+        out["required_rate_kg_per_week"] * 7700
+    )
+    assert out["weeks_remaining"] == 20.0
+
+
+def test_weight_guidance_without_data_says_so(db_session, seed_user):
+    seed_user.primary_goal = "weight_loss"
+    seed_user.goal_params = {"target_weight_kg": 80.0}
+    db_session.commit()
+    out = run_tool(db_session, seed_user.id, TODAY, "get_weight_guidance", {})
+    assert out["status"] == "missing_data"
