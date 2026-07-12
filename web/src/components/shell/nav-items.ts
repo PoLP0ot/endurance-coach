@@ -22,7 +22,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Progress", icon: Activity, mobile: true },
   { href: "/coach", label: "Coach", icon: MessageSquare, mobile: true },
   { href: "/plan", label: "Plan", icon: CalendarRange, mobile: true },
-  { href: "/strength", label: "Strength", icon: Weight, mobile: false },
+  { href: "/strength", label: "Strength", icon: Weight, mobile: true },
   { href: "/activities", label: "Activities", icon: History, mobile: false },
   { href: "/exercises", label: "Exercises", icon: Dumbbell, mobile: false },
   { href: "/settings", label: "Settings", icon: Settings, mobile: true },

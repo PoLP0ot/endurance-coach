@@ -17,6 +17,7 @@ import { BriefCard } from "./brief-card";
 import { TrainingLoadChart } from "./training-load-chart";
 import { GarminStatusBanner } from "./garmin-status-banner";
 import { GoalHero } from "./goal-hero";
+import { WeightQuickLog } from "./weight-quick-log";
 import { SignalsCard } from "./signals-card";
 import { WeekGlance } from "./week-glance";
 import { BodyCard } from "./body-card";
@@ -134,6 +135,9 @@ export function DashboardView() {
       {lens && <p className="-mt-3 text-sm text-muted-foreground">{lens}</p>}
       <GarminStatusBanner />
       <GoalHero goal={data.goal} progress={data.goal_structured} />
+      {data.goal_structured.kind === "weight_loss" && (
+        <WeightQuickLog onLogged={() => void load()} />
+      )}
       <TodayCard />
       <BriefCard
         fallback={{ headline: data.form.headline, detail: data.form.detail }}

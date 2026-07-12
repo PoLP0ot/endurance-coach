@@ -52,3 +52,40 @@ describe("CoachOnboard (A15)", () => {
     expect(await screen.findByRole("button", { name: /let's go/i })).toBeInTheDocument();
   });
 });
+
+describe("CoachOnboard weight-loss discovery (audit 2.2/2.3)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getAccessToken.mockResolvedValue("jwt");
+    apiFetch.mockResolvedValue({});
+  });
+
+  it("asks weight, deadline and weekly availability, then saves all params", async () => {
+    render(<CoachOnboard />);
+    fireEvent.click(screen.getByRole("button", { name: /weight loss/i }));
+
+    fireEvent.change(await screen.findByLabelText(/target weight/i), {
+      target: { value: "80" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    fireEvent.change(await screen.findByLabelText(/target date/i), {
+      target: { value: "2026-12-31" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    fireEvent.click(await screen.findByRole("button", { name: /4 days/i }));
+
+    await screen.findByRole("button", { name: /let's go/i });
+    const paramsCall = apiFetch.mock.calls.find(
+      ([, opts]) =>
+        typeof opts?.body === "string" && opts.body.includes("goal_params"),
+    );
+    const body = JSON.parse(paramsCall![1].body);
+    expect(body.goal_params).toEqual({
+      target_weight_kg: 80,
+      target_date: "2026-12-31",
+      weekly_activity_target: 4,
+    });
+  });
+});

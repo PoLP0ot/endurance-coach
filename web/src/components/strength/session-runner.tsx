@@ -21,7 +21,13 @@ import { Input } from "@/components/ui/input";
 
 type Phase = "loading" | "error" | "premium" | "not-found" | "ready";
 
-type SetEntry = { weight: string; reps: string; logged: boolean; saving: boolean };
+type SetEntry = {
+  weight: string;
+  reps: string;
+  rpe: string;
+  logged: boolean;
+  saving: boolean;
+};
 type SetsState = Record<string, SetEntry>;
 
 const setKey = (exerciseId: string, index: number) => `${exerciseId}:${index}`;
@@ -41,6 +47,7 @@ function initialSets(
       state[key] = {
         weight: weight != null ? String(weight) : "",
         reps: String(existing?.reps ?? item.reps),
+        rpe: "",
         logged: existing !== undefined,
         saving: false,
       };
@@ -137,7 +144,7 @@ export function SessionRunner({ week, day }: { week: number; day: number }) {
           set_index: index,
           weight_kg: entry.weight === "" ? null : Number(entry.weight),
           reps,
-          rpe: null,
+          rpe: entry.rpe === "" ? null : Number(entry.rpe),
         }),
       });
       patchSet(key, { logged: true, saving: false });
@@ -275,6 +282,17 @@ export function SessionRunner({ week, day }: { week: number; day: number }) {
                       className="h-9 w-20"
                       value={entry.reps}
                       onChange={(e) => patchSet(key, { reps: e.target.value })}
+                    />
+                    <Input
+                      aria-label={`${item.name} set ${index} RPE`}
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={10}
+                      placeholder="RPE"
+                      className="h-9 w-16"
+                      value={entry.rpe}
+                      onChange={(e) => patchSet(key, { rpe: e.target.value })}
                     />
                     <Button
                       size="sm"

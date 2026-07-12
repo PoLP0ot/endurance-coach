@@ -23,44 +23,66 @@ const GOAL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "unsure", label: "Not sure yet" },
 ];
 
-/** Per-goal follow-up: a quick chip choice or a single number, → goal_params. */
+/** Per-goal follow-ups: quick chip choices, a number or a date, → goal_params. */
 type MetaChip = { label: string; params: Record<string, unknown> };
-interface GoalMeta {
+interface GoalMetaStep {
   prompt: string;
-  kind: "chips" | "number";
+  kind: "chips" | "number" | "date";
   chips?: MetaChip[];
   inputKey?: string;
   inputLabel?: string;
   inputUnit?: string;
 }
 
-const GOAL_META: Record<string, GoalMeta> = {
-  marathon: {
-    prompt: "What finish time are you chasing?",
-    kind: "chips",
-    chips: [
-      { label: "Sub-3:30", params: { target_time_s: 12600 } },
-      { label: "Sub-4:00", params: { target_time_s: 14400 } },
-      { label: "Sub-4:30", params: { target_time_s: 16200 } },
-      { label: "Just finish", params: {} },
-    ],
-  },
-  weight_loss: {
-    prompt: "What's your target weight?",
-    kind: "number",
-    inputKey: "target_weight_kg",
-    inputLabel: "Target weight",
-    inputUnit: "kg",
-  },
-  health: {
-    prompt: "How many active days per week are you aiming for?",
-    kind: "chips",
-    chips: [
-      { label: "3 days", params: { weekly_activity_target: 3 } },
-      { label: "4 days", params: { weekly_activity_target: 4 } },
-      { label: "5 days", params: { weekly_activity_target: 5 } },
-    ],
-  },
+const GOAL_META: Record<string, GoalMetaStep[]> = {
+  marathon: [
+    {
+      prompt: "What finish time are you chasing?",
+      kind: "chips",
+      chips: [
+        { label: "Sub-3:30", params: { target_time_s: 12600 } },
+        { label: "Sub-4:00", params: { target_time_s: 14400 } },
+        { label: "Sub-4:30", params: { target_time_s: 16200 } },
+        { label: "Just finish", params: {} },
+      ],
+    },
+  ],
+  weight_loss: [
+    {
+      prompt: "What's your target weight?",
+      kind: "number",
+      inputKey: "target_weight_kg",
+      inputLabel: "Target weight",
+      inputUnit: "kg",
+    },
+    {
+      prompt: "By when do you want to get there? A deadline keeps us honest.",
+      kind: "date",
+      inputKey: "target_date",
+      inputLabel: "Target date",
+    },
+    {
+      prompt:
+        "How many days a week can you realistically train? I'll build the plan around that — a mix of cardio and strength.",
+      kind: "chips",
+      chips: [
+        { label: "3 days", params: { weekly_activity_target: 3 } },
+        { label: "4 days", params: { weekly_activity_target: 4 } },
+        { label: "5 days", params: { weekly_activity_target: 5 } },
+      ],
+    },
+  ],
+  health: [
+    {
+      prompt: "How many active days per week are you aiming for?",
+      kind: "chips",
+      chips: [
+        { label: "3 days", params: { weekly_activity_target: 3 } },
+        { label: "4 days", params: { weekly_activity_target: 4 } },
+        { label: "5 days", params: { weekly_activity_target: 5 } },
+      ],
+    },
+  ],
 };
 
 const FOLLOW_UP: Record<string, string> = {
@@ -91,6 +113,8 @@ export function CoachOnboard() {
   ]);
   const [step, setStep] = useState<"asking" | "meta" | "done">("asking");
   const [goal, setGoal] = useState<string | null>(null);
+  const [metaIndex, setMetaIndex] = useState(0);
+  const [params, setParams] = useState<Record<string, unknown>>({});
   const [numberDraft, setNumberDraft] = useState("");
 
   const say = (role: Msg["role"], content: string) =>
@@ -114,30 +138,48 @@ export function CoachOnboard() {
     setGoal(option.value);
     await patchProfile({ primary_goal: option.value });
     say("coach", FOLLOW_UP[option.value]);
-    if (GOAL_META[option.value]) {
-      say("coach", GOAL_META[option.value].prompt);
+    if (GOAL_META[option.value]?.length) {
+      say("coach", GOAL_META[option.value][0].prompt);
+      setMetaIndex(0);
       setStep("meta");
     } else {
       setStep("done");
     }
   };
 
-  const answerMeta = async (label: string, params: Record<string, unknown>) => {
+  const answerMeta = async (label: string, stepParams: Record<string, unknown>) => {
     say("user", label);
-    if (goal && Object.keys(params).length > 0) {
-      await patchProfile({ primary_goal: goal, goal_params: params });
+    const merged = { ...params, ...stepParams };
+    setParams(merged);
+    setNumberDraft("");
+    const steps = goal ? GOAL_META[goal] ?? [] : [];
+    const next = metaIndex + 1;
+    if (next < steps.length) {
+      say("coach", steps[next].prompt);
+      setMetaIndex(next);
+      return;
+    }
+    if (goal && Object.keys(merged).length > 0) {
+      await patchProfile({ primary_goal: goal, goal_params: merged });
     }
     say("coach", "Got it — that gives me a target to coach you toward.");
     setStep("done");
   };
 
+  const currentMeta =
+    goal && step === "meta" ? GOAL_META[goal]?.[metaIndex] : undefined;
+
   const submitNumber = async () => {
-    const meta = goal ? GOAL_META[goal] : undefined;
     const value = Number(numberDraft);
-    if (!meta?.inputKey || !numberDraft || Number.isNaN(value)) return;
-    await answerMeta(`${numberDraft} ${meta.inputUnit ?? ""}`.trim(), {
-      [meta.inputKey]: value,
+    if (!currentMeta?.inputKey || !numberDraft || Number.isNaN(value)) return;
+    await answerMeta(`${numberDraft} ${currentMeta.inputUnit ?? ""}`.trim(), {
+      [currentMeta.inputKey]: value,
     });
+  };
+
+  const submitDate = async () => {
+    if (!currentMeta?.inputKey || !numberDraft) return;
+    await answerMeta(numberDraft, { [currentMeta.inputKey]: numberDraft });
   };
 
   return (
@@ -186,9 +228,9 @@ export function CoachOnboard() {
             ))}
           </div>
         )}
-        {step === "meta" && goal && GOAL_META[goal]?.kind === "chips" && (
+        {currentMeta?.kind === "chips" && (
           <div className="flex flex-wrap gap-2">
-            {GOAL_META[goal].chips!.map((c) => (
+            {currentMeta.chips!.map((c) => (
               <button
                 key={c.label}
                 type="button"
@@ -200,19 +242,19 @@ export function CoachOnboard() {
             ))}
           </div>
         )}
-        {step === "meta" && goal && GOAL_META[goal]?.kind === "number" && (
+        {(currentMeta?.kind === "number" || currentMeta?.kind === "date") && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              void submitNumber();
+              void (currentMeta.kind === "date" ? submitDate() : submitNumber());
             }}
             className="flex items-center gap-2"
           >
             <Input
-              type="number"
-              inputMode="decimal"
-              aria-label={GOAL_META[goal].inputLabel ?? "Value"}
-              placeholder={GOAL_META[goal].inputLabel}
+              type={currentMeta.kind === "date" ? "date" : "number"}
+              inputMode={currentMeta.kind === "date" ? undefined : "decimal"}
+              aria-label={currentMeta.inputLabel ?? "Value"}
+              placeholder={currentMeta.inputLabel}
               value={numberDraft}
               onChange={(e) => setNumberDraft(e.target.value)}
             />

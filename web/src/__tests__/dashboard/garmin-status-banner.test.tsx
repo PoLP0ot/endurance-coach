@@ -30,7 +30,7 @@ describe("GarminStatusBanner (S6)", () => {
   it("renders nothing while connected", async () => {
     apiFetch.mockResolvedValueOnce({
       status: "connected",
-      last_sync_at: "2026-07-05T07:00:00Z",
+      last_sync_at: new Date().toISOString(),
     });
     const { container } = render(<GarminStatusBanner />);
     await vi.waitFor(() => expect(apiFetch).toHaveBeenCalled());
@@ -42,5 +42,34 @@ describe("GarminStatusBanner (S6)", () => {
     const { container } = render(<GarminStatusBanner />);
     await vi.waitFor(() => expect(apiFetch).toHaveBeenCalled());
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("GarminStatusBanner stale sync nudge", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getAccessToken.mockResolvedValue("jwt");
+  });
+
+  it("nudges to sync when the last sync is days old", async () => {
+    const old = new Date(Date.now() - 5 * 86400000).toISOString();
+    apiFetch.mockResolvedValueOnce({ status: "connected", last_sync_at: old });
+    render(<GarminStatusBanner />);
+    expect(await screen.findByText(/last sync was 5 days ago/i)).toBeInTheDocument();
+  });
+
+  it("starts a sync from the nudge", async () => {
+    const old = new Date(Date.now() - 4 * 86400000).toISOString();
+    apiFetch
+      .mockResolvedValueOnce({ status: "connected", last_sync_at: old })
+      .mockResolvedValueOnce({ job_id: "j1" });
+    render(<GarminStatusBanner />);
+    const { fireEvent } = await import("@testing-library/react");
+    fireEvent.click(await screen.findByRole("button", { name: /sync now/i }));
+    expect(await screen.findByText(/sync started/i)).toBeInTheDocument();
+    expect(apiFetch).toHaveBeenLastCalledWith(
+      "/garmin/sync",
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 });
