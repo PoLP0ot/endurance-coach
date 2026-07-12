@@ -21,6 +21,12 @@ from app.services.strength import (
     create_strength_plan,
     current_strength_plan,
 )
+from app.services.strength_logs import (
+    complete_session,
+    log_set,
+    session_logs,
+    session_summary,
+)
 
 router = APIRouter(prefix="/strength", tags=["strength"])
 
@@ -82,3 +88,83 @@ async def get_current_strength_plan(
     """Return the user's active strength program, or null when none exists."""
     plan = current_strength_plan(db, user.id)
     return {"plan": _serialize(plan) if plan is not None else None}
+
+
+class SetLogRequest(BaseModel):
+    week: int = Field(ge=1)
+    day: int = Field(ge=0, le=6)
+    exercise_id: str = Field(max_length=8)
+    set_index: int = Field(ge=1, le=20)
+    weight_kg: float | None = Field(default=None, ge=0, le=500)
+    reps: int = Field(ge=1, le=100)
+    rpe: float | None = Field(default=None, ge=1, le=10)
+
+
+class CompleteSessionRequest(BaseModel):
+    week: int = Field(ge=1)
+    day: int = Field(ge=0, le=6)
+
+
+def _require_plan(db: Session, user_id: str):
+    plan = current_strength_plan(db, user_id)
+    if plan is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "no_active_plan")
+    return plan
+
+
+@router.post("/logs", status_code=status.HTTP_201_CREATED)
+async def log_strength_set(
+    body: SetLogRequest,
+    user: User = Depends(require_premium),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Record (or correct) one performed set of the active program."""
+    plan = _require_plan(db, user.id)
+    try:
+        return log_set(
+            db,
+            user.id,
+            plan,
+            week=body.week,
+            day=body.day,
+            exercise_id=body.exercise_id,
+            set_index=body.set_index,
+            weight_kg=body.weight_kg,
+            reps=body.reps,
+            rpe=body.rpe,
+        )
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+
+@router.get("/logs")
+async def get_session_logs(
+    week: int,
+    day: int,
+    user: User = Depends(require_premium),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Sets already logged for one session, with its live summary."""
+    plan = _require_plan(db, user.id)
+    try:
+        summary = session_summary(db, user.id, plan, week=week, day=day)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+    return {
+        "sets": session_logs(db, user.id, plan.id, week=week, day=day),
+        "summary": summary,
+    }
+
+
+@router.post("/sessions/complete")
+async def complete_strength_session(
+    body: CompleteSessionRequest,
+    user: User = Depends(require_premium),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Mark today's session done and return prescribed-vs-performed."""
+    plan = _require_plan(db, user.id)
+    try:
+        return complete_session(db, user.id, plan, week=body.week, day=body.day)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc

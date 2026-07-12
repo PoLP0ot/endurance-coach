@@ -10,6 +10,7 @@ from app.models.garmin import GarminConnection
 from app.models.health import DailyHealth
 from app.models.import_job import ImportJob
 from app.models.plan import TrainingPlan
+from app.models.strength_log import StrengthSessionDone, StrengthSetLog
 from app.models.strength_plan import StrengthPlan
 from app.models.subscription import Subscription
 from app.models.user import User
@@ -30,4 +31,6 @@ __all__ = [
     "DailyBrief",
     "Exercise",
     "StrengthPlan",
+    "StrengthSetLog",
+    "StrengthSessionDone",
 ]

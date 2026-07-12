@@ -50,6 +50,16 @@ equipment in dialogue per TOOL_SPECS description). UI `/strength` (nav Weight
 icon, mobile:false): setup form (freq/weeks/level selects + equipment toggle
 chips) or program view (chips, block bar, current week sessions with RPE/rest,
 all-weeks list). Loads start None — M5 fills from logs.
+**M4 DONE**: `StrengthSetLog` (unique plan/week/day/exercise/set_index —
+re-log same index = correction) + `StrengthSessionDone` (unique plan/week/day,
+idempotent complete), migration 0014. `services/strength_logs.py` (log_set
+validates session+exercise against plan structure JSON, session_summary =
+prescribed vs logged + volume_kg). Routes: POST/GET /strength/logs,
+POST /strength/sessions/complete (premium; 409 no_active_plan, 404 unknown).
+UI `/strength/session?week=&day=` SessionRunner: per-exercise cards (GIF 64px,
+prescription), set rows kg/reps prefilled, Log per set → sticky rest countdown
+(setInterval), Finish → summary (sets, volume) ; "Start →" links on current
+week in StrengthView. Rehydrates logged sets on load.
 Founder decision: Vercel Deployment Protection stays ON pre-launch (email
 confirmation links + beta testers blocked until then) — launch-checklist item.
 Front URL (real):

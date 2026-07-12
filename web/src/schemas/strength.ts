@@ -54,6 +54,30 @@ export const strengthCurrentSchema = z.object({
   plan: strengthPlanSchema.nullable(),
 });
 
+export const loggedSetSchema = z.object({
+  exercise_id: z.string(),
+  set_index: z.number(),
+  weight_kg: z.number().nullable(),
+  reps: z.number(),
+  rpe: z.number().nullable(),
+});
+
+export const sessionSummarySchema = z.object({
+  week: z.number(),
+  day: z.number(),
+  title: z.string(),
+  sets_prescribed: z.number(),
+  sets_logged: z.number(),
+  volume_kg: z.number(),
+  completed: z.boolean(),
+});
+
+export const sessionLogsSchema = z.object({
+  sets: z.array(loggedSetSchema),
+  summary: sessionSummarySchema,
+});
+
+export type SessionSummary = z.infer<typeof sessionSummarySchema>;
 export type StrengthItem = z.infer<typeof strengthItemSchema>;
 export type StrengthSession = z.infer<typeof strengthSessionSchema>;
 export type StrengthWeek = z.infer<typeof strengthWeekSchema>;

@@ -144,6 +144,18 @@ const API_FIXTURES: Record<string, unknown> = {
       },
     },
   },
+  "/strength/logs": {
+    sets: [],
+    summary: {
+      week: 3,
+      day: 0,
+      title: "Full body A",
+      sets_prescribed: 8,
+      sets_logged: 0,
+      volume_kg: 0,
+      completed: false,
+    },
+  },
   "/coach/today": {
     status: "ok",
     date: "2026-06-24",
@@ -457,6 +469,7 @@ const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "exercises", path: "/exercises" },
   { name: "exercise-detail", path: "/exercises/0025" },
   { name: "strength", path: "/strength" },
+  { name: "strength-session", path: "/strength/session?week=3&day=0" },
   { name: "privacy", path: "/settings/privacy" },
 ];
 

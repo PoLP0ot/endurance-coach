@@ -148,7 +148,7 @@ plans endurance existants.
 - UI : page programme (timeline de blocs, semaine courante dépliée en
   séances), à côté du plan endurance.
 
-## M4 — Mode séance + log des perfs `[ ]`
+## M4 — Mode séance + log des perfs `[x]`
 - Modèle `StrengthSetLog` (migration 0014) : plan_id, week, day,
   exercise_id, set_index, weight_kg, reps, rpe (opt), logged_at.
 - Écran « séance du jour » (depuis le programme) : exercice par exercice

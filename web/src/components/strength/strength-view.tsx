@@ -172,11 +172,19 @@ function WeekDetail({ week }: { week: StrengthWeek }) {
     <div className="space-y-3">
       {week.sessions.map((session) => (
         <div key={session.day} className="rounded border border-line bg-card">
-          <div className="flex items-baseline justify-between border-b border-line px-4 py-2.5">
+          <div className="flex items-baseline justify-between gap-3 border-b border-line px-4 py-2.5">
             <p className="font-display text-sm font-semibold text-ink">
               {session.title}
             </p>
-            <p className="text-xs text-muted-foreground">{DAY_NAMES[session.day]}</p>
+            <p className="ml-auto text-xs text-muted-foreground">
+              {DAY_NAMES[session.day]}
+            </p>
+            <Link
+              href={`/strength/session?week=${week.week}&day=${session.day}`}
+              className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Start →
+            </Link>
           </div>
           <ul className="divide-y divide-line">
             {session.items.map((item) => (
