@@ -49,6 +49,32 @@ def create_app() -> FastAPI:
         description="AI coaching platform for endurance athletes.",
     )
 
+    @app.on_event("startup")
+    async def seed_reference_data() -> None:
+        """One-time exercise-library seed, off the boot path (thread)."""
+        if settings.environment == "test":
+            return
+
+        def _seed() -> None:
+            from app.core.db import SessionLocal
+            from app.services.exercises import ensure_seeded
+
+            db = SessionLocal()
+            try:
+                seeded = ensure_seeded(db)
+                if seeded:
+                    logging.getLogger("app").info(
+                        "exercise library seeded", extra={"count": seeded}
+                    )
+            except Exception:  # noqa: BLE001 — never take the API down for this
+                logging.getLogger("app").exception("exercise seed failed")
+            finally:
+                db.close()
+
+        import asyncio
+
+        asyncio.get_running_loop().run_in_executor(None, _seed)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
