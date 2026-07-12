@@ -81,6 +81,30 @@ verification. ⚠️ Worker service did NOT redeploy on push during ~25 min
 (seed only landed via the API path) — check the worker's GitHub deploy
 trigger in the Railway dashboard; until confirmed, worker crons may run an
 older image after pushes.
+### Audit-fix wave (2026-07-12, after AUDIT-PERSONA.md) — 6 commits 496aa70…1eb1aef
+Fixed the audit Top 10 (all code items): WeightLossParams.target_date +
+deadline-aware band (required_rate exposed); weight_loss microcycle mixes
+cardio+strength and is sized by weekly_activity_target (3/4/5, default 6 w/ 2
+strength days) — goal_params plumbed through build_plan_structure/adapt_plan/
+daily_session_template(…, goal_params); POST /profile/weight manual weigh-in
+(Garmin import never nulls a manual weight); strength picks pattern-ranked
+(_SLOT_PREFERENCES keywords + _ADVANCED_ONLY beginner guard + per-block
+rotation); analysis zones anchor max(190, peaks) + cache regenerates on goal
+change; chat: get_weight_guidance tool (7700 kcal/kg, required rate, weeks
+remaining) + TOOL_ADDENDUM forbids any self-computed number (verified live:
+calorie trap now answers from tool numbers only). Front: WeightQuickLog on
+dashboard (weight_loss), onboarding weight_loss = 3 steps (weight/date/days),
+Strength in 5-slot mobile nav (grid-cols-5), stale-sync banner (>3 d → Sync
+now via POST /garmin/sync), RPE input per set. Full-loop verified live on
+:8001: 2 weigh-ins → band on_track for 2026-12-31 deadline, ETA, plan with 2
+strength days. Suites: pytest exit 0, 103 vitest, ruff/eslint/build green.
+Remaining audit items non-code: Vercel protection (launch), worker GitHub
+redeploy (founder connected repo, root=/api — awaiting first deploy).
+dev.db state after the wave: marc = weight_loss demo (target 80 kg,
+target_date 2026-12-31, weekly_activity_target 4, weigh-ins 2026-07-08 89.0 /
+07-12 88.5, active 20-wk plan with 2 strength days, beginner strength program
+gym-equipment). Old hyrox goal_params were `{target_time_s, race_distance_m}`
+if ever needed back.
 **CI is GREEN for the first time ever** (run 12, bbb03b7): runs 1–11 had
 always failed on 2× UP038 (`isinstance(v, (int, float))`) — local venv had
 ruff 0.15 (rule retired) vs CI's pinned ruff==0.8.4; local venv is now
