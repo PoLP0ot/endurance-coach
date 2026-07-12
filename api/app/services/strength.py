@@ -42,6 +42,24 @@ BLOCK_FOCUS = {
 DELOAD_RPE = 6
 LEVEL_SET_DELTA = {"beginner": -1, "intermediate": 0, "advanced": 1}
 
+# Preferred movement patterns per slot (matched against exercise names,
+# most relevant first). Candidates matching none rank last.
+_SLOT_PREFERENCES: dict[str, tuple[str, ...]] = {
+    "squat": ("squat", "leg press", "lunge"),
+    "push": ("bench press", "chest press", "push-up", "push up", "chest dip"),
+    "pull": ("pulldown", "row", "pull-up", "pullover"),
+    "hinge": ("deadlift", "hip thrust", "leg curl", "femoral", "good morning"),
+    "shoulders": ("shoulder press", "overhead press", "lateral raise"),
+    "core": ("crunch", "plank", "sit-up", "leg raise"),
+    "biceps": ("curl",),
+    "triceps": ("pushdown", "extension", "triceps dip"),
+    "glutes": ("hip thrust", "glute bridge", "hip extension", "kickback"),
+    "calves": ("calf raise", "calf press", "calf"),
+}
+
+# Movements never prescribed to a beginner cold.
+_ADVANCED_ONLY = ("pull-up", "chin-up", "muscle up", "pistol", "handstand", "planche")
+
 # A slot is (label, target-muscle priority list). Ordered big-to-small.
 _SLOT_SQUAT = ("squat", ["quads"])
 _SLOT_PUSH = ("push", ["pectorals"])
@@ -95,14 +113,43 @@ def _library_by_target(db: Session, equipment: list[str]) -> dict[str, list[Exer
 
 
 def _pick(
-    by_target: dict[str, list[Exercise]], targets: list[str], variant: int
+    by_target: dict[str, list[Exercise]],
+    slot: str,
+    targets: list[str],
+    variant: int,
+    level: str,
+    block_index: int,
 ) -> Exercise | None:
-    """Nth candidate for a slot; the variant differentiates A/B sessions."""
+    """Best-ranked candidate for a slot.
+
+    Pattern-matching names rank first, beginners never get advanced-only
+    movements, and the pick rotates per A/B variant and per training block.
+    """
+    pool: list[Exercise] = []
     for target in targets:
-        candidates = by_target.get(target)
-        if candidates:
-            return candidates[variant % len(candidates)]
-    return None
+        pool.extend(by_target.get(target, []))
+    if not pool:
+        return None
+
+    if level == "beginner":
+        safe = [
+            e for e in pool
+            if not any(k in e.name.lower() for k in _ADVANCED_ONLY)
+        ]
+        pool = safe or pool
+
+    prefs = _SLOT_PREFERENCES.get(slot, ())
+
+    def rank(exercise: Exercise) -> int:
+        name = exercise.name.lower()
+        for i, keyword in enumerate(prefs):
+            if keyword in name:
+                return i
+        return len(prefs)
+
+    ranked = sorted(pool, key=lambda e: (rank(e), e.id))
+    preferred = [e for e in ranked if rank(e) < len(prefs)] or ranked
+    return preferred[(variant + block_index) % len(preferred)]
 
 
 def _prescription(block: str, level: str, is_deload: bool) -> dict:
@@ -149,9 +196,11 @@ def build_strength_structure(
     for _, focus in layout:
         focus_counts[focus] = focus_counts.get(focus, 0) + 1
 
+    block_order = {"adaptation": 0, "hypertrophy": 1, "strength": 2}
     plan_weeks: list[dict] = []
     for i in range(weeks):
         block = blocks[i]
+        block_index = block_order[block]
         is_deload = (i + 1) % DELOAD_EVERY == 0
         prescription = _prescription(block, level, is_deload)
 
@@ -163,7 +212,7 @@ def build_strength_structure(
             focus_seen[focus] = variant + 1
             items = []
             for label, targets in FOCUS_SLOTS[focus]:
-                exercise = _pick(by_target, targets, variant)
+                exercise = _pick(by_target, label, targets, variant, level, block_index)
                 if exercise is None:
                     continue
                 items.append(

@@ -139,3 +139,47 @@ def test_create_archives_previous_and_current_returns_latest(db_session, seed_us
     current = current_strength_plan(db_session, seed_user.id)
     assert current is not None and current.id == second.id
     assert current.weeks == 12
+
+
+def test_slot_prefers_pattern_matching_names(db_session):
+    seed_library(db_session)
+    upsert_exercises(
+        db_session,
+        [make_raw("9001", "dumbbell goblet squat", body_part="upper legs",
+                  target="quads", equipment="dumbbell")],
+    )
+    structure = build(db_session)
+    squat = structure["weeks"][0]["sessions"][0]["items"][0]
+    assert squat["slot"] == "squat"
+    assert "squat" in squat["name"]
+
+
+def test_beginner_never_gets_advanced_movements(db_session):
+    seed_library(db_session)
+    upsert_exercises(
+        db_session,
+        [make_raw("9002", "wide grip pull-up", body_part="back",
+                  target="lats", equipment="body weight")],
+    )
+    beginner = build(db_session, level="beginner")
+    advanced = build(db_session, level="advanced")
+
+    def pull_names(structure):
+        return {
+            item["name"]
+            for week in structure["weeks"]
+            for session in week["sessions"]
+            for item in session["items"]
+            if item["slot"] == "pull"
+        }
+
+    assert all("pull-up" not in n for n in pull_names(beginner))
+    assert any("pull-up" in n for n in pull_names(advanced))
+
+
+def test_exercises_rotate_between_blocks(db_session):
+    seed_library(db_session)
+    structure = build(db_session, weeks=12)
+    adaptation = structure["weeks"][0]["sessions"][0]["items"][0]["exercise_id"]
+    strength_block = structure["weeks"][4]["sessions"][0]["items"][0]["exercise_id"]  # hypertrophy
+    assert adaptation != strength_block
