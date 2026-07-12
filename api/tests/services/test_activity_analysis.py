@@ -93,3 +93,31 @@ def test_get_or_create_caches_and_calls_llm_once(db_session, seed_user):
     assert first.narrative == "Your easy run built aerobic base."
     assert llm.calls == 1  # second call served from cache
     assert "tss" in first.facts
+
+
+def test_zones_use_athlete_ceiling_not_session_peak():
+    """A brisk walk (avg 135, session max 146) must not read as all-out Z5."""
+    activity = _run()
+    activity.avg_hr = 135
+    activity.max_hr = 146
+    facts = build_activity_facts(activity, {"hr": [135] * 100})
+    dist = facts["intensity_distribution"]
+    assert dist["z5"] < 0.1
+    assert dist["z3"] > 0.5  # 135 bpm against a 190 default ceiling
+
+
+def test_goal_change_regenerates_the_cached_analysis(db_session, seed_user):
+    activity = _run(seed_user.id)
+    db_session.add(activity)
+    db_session.commit()
+
+    llm = _StubLLM()
+    first = get_or_create_analysis(db_session, activity, llm, goal="marathon")
+    assert first.facts["goal"] == "marathon" and llm.calls == 1
+
+    again = get_or_create_analysis(db_session, activity, llm, goal="marathon")
+    assert llm.calls == 1 and again.id == first.id
+
+    switched = get_or_create_analysis(db_session, activity, llm, goal="weight_loss")
+    assert llm.calls == 2
+    assert switched.facts["goal"] == "weight_loss"

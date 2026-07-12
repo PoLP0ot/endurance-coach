@@ -84,7 +84,9 @@ def build_activity_facts(
     }
     hr_samples = _hr_samples(streams)
     if hr_samples:
-        ceiling = activity.max_hr or max(hr_samples) or DEFAULT_MAX_HR
+        # Zones are anchored on the ATHLETE's ceiling, not this session's peak —
+        # otherwise every easy effort reads as all-out Z5.
+        ceiling = max(DEFAULT_MAX_HR, activity.max_hr or 0, max(hr_samples))
         bounds = [int(ceiling * f) for f in (0.6, 0.7, 0.8, 0.9)]
         facts["intensity_distribution"] = {
             z: round(frac, 3)
@@ -119,18 +121,18 @@ def get_or_create_analysis(
             AIAnalysis.prompt_version == prompt_version,
         )
     ).scalars().first()
-    if existing is not None:
+    # A cached narrative written for another goal would coach the wrong thing.
+    if existing is not None and existing.facts.get("goal") == goal:
         return existing
 
     facts = build_activity_facts(activity, _stream_for(db, activity.id), goal)
     narrative = llm.narrate(Task.ANALYSIS, facts, ANALYSIS_INSTRUCTION)
-    analysis = AIAnalysis(
-        activity_id=activity.id,
-        model=llm.model_for(Task.ANALYSIS),
-        facts=facts,
-        narrative=narrative,
-        prompt_version=prompt_version,
+    analysis = existing if existing is not None else AIAnalysis(
+        activity_id=activity.id, prompt_version=prompt_version
     )
+    analysis.model = llm.model_for(Task.ANALYSIS)
+    analysis.facts = facts
+    analysis.narrative = narrative
     db.add(analysis)
     db.commit()
     db.refresh(analysis)
