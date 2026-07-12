@@ -1,6 +1,7 @@
 import {
   Activity,
   CalendarRange,
+  Dumbbell,
   History,
   MessageSquare,
   Settings,
@@ -21,6 +22,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/coach", label: "Coach", icon: MessageSquare, mobile: true },
   { href: "/plan", label: "Plan", icon: CalendarRange, mobile: true },
   { href: "/activities", label: "Activities", icon: History, mobile: false },
+  { href: "/exercises", label: "Exercises", icon: Dumbbell, mobile: false },
   { href: "/settings", label: "Settings", icon: Settings, mobile: true },
 ] as const;
 

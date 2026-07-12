@@ -32,7 +32,15 @@ progression) reusing the adapt_plan re-seed mechanic.
 `upsert_exercises` + `scripts/seed_exercises.py` (1,324 rows seeded in dev.db),
 `GET /exercises` (body_part/target/equipment/q filters, keyset by name+id) +
 `GET /exercises/{id}` (instructions EN steps), auth required, free tier.
-CDN base in `services/exercises.py::CDN_BASE`. Front URL (real):
+CDN base in `services/exercises.py::CDN_BASE`.
+**M2 DONE**: `/exercises` page (search debounced 300ms + body_part/equipment
+selects from `schemas/exercise.ts` const lists mirroring the dataset, card grid
+with eager-first-8/lazy thumbnails) + `/exercises/[id]` sheet (GIF, muscles,
+instruction steps, attribution). Sidebar nav "Exercises" (mobile: false).
+Playwright fixtures + routes added to authed.spec.ts (real CDN media).
+Founder decision: Vercel Deployment Protection stays ON pre-launch (email
+confirmation links + beta testers blocked until then) — launch-checklist item.
+Front URL (real):
 https://endurance-coach-coach8.vercel.app — CORS verified OK against prod API,
 but **Vercel Deployment Protection still ON** (302 → vercel.com/sso-api).
 Prod checks 2026-07-12: API /health 200, 401 clean, 117 pytest + 82 vitest

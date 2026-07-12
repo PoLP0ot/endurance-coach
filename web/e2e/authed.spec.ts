@@ -29,7 +29,36 @@ const fakeSession = {
 };
 
 /** API fixtures keyed by request path (pathname only). */
+const CDN = "https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main";
+const exerciseCard = (id: string, name: string, target: string, media: string) => ({
+  id,
+  name,
+  body_part: "chest",
+  target,
+  equipment: "barbell",
+  image_url: `${CDN}/images/${media}.jpg`,
+  gif_url: `${CDN}/videos/${media}.gif`,
+});
+
 const API_FIXTURES: Record<string, unknown> = {
+  "/exercises": {
+    items: [
+      exerciseCard("0025", "barbell bench press", "pectorals", "0025-EIeI8Vf"),
+      exerciseCard("0033", "barbell decline bench press", "pectorals", "0033-GrO65fd"),
+    ],
+    next_cursor: null,
+  },
+  "/exercises/0025": {
+    ...exerciseCard("0025", "barbell bench press", "pectorals", "0025-EIeI8Vf"),
+    muscle_group: "triceps",
+    secondary_muscles: ["triceps", "shoulders"],
+    instructions: [
+      "Lie flat on the bench with your feet planted on the floor.",
+      "Grip the bar slightly wider than shoulder width and unrack it.",
+      "Lower the bar to mid-chest with control, then press back up.",
+    ],
+    attribution: "Gym visual — https://gymvisual.com/",
+  },
   "/coach/today": {
     status: "ok",
     date: "2026-06-24",
@@ -340,6 +369,8 @@ const AUTHED_ROUTES: Array<{ name: string; path: string }> = [
   { name: "subscription", path: "/settings/subscription" },
   { name: "activities", path: "/activities" },
   { name: "activity-detail", path: "/activities/a1" },
+  { name: "exercises", path: "/exercises" },
+  { name: "exercise-detail", path: "/exercises/0025" },
   { name: "privacy", path: "/settings/privacy" },
 ];
 

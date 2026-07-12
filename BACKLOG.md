@@ -113,7 +113,7 @@ avant la mise en vente**. Les GIFs ne sont PAS vendorisés (repo 127 Mo) : ils
 sont servis via CDN `cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/…`.
 Invariant conservé : composition de séance déterministe, le LLM narre.
 
-## M1 — Bibliothèque d'exercices (data + API) `[ ]`
+## M1 — Bibliothèque d'exercices (data + API) `[x]`
 - Modèle `Exercise` (migration 0012) : id, name, body_part, target,
   muscle_group, secondary_muscles (JSON), equipment, instructions (steps EN),
   image_url, gif_url, attribution.
@@ -123,7 +123,7 @@ Invariant conservé : composition de séance déterministe, le LLM narre.
   pagination keyset ; accessible free.
 - pytest (seed idempotent sur fixture réduite, filtres, pagination).
 
-## M2 — Bibliothèque d'exercices (UI) `[ ]`
+## M2 — Bibliothèque d'exercices (UI) `[x]`
 - Page `/exercises` : recherche + filtres (groupe musculaire, équipement),
   cards avec GIF lazy-loadé ; détail : GIF, muscles cible/secondaires,
   instructions pas-à-pas.
