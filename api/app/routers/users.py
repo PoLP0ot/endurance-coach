@@ -8,8 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from sqlalchemy import select
+
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user
+from app.models.health import DailyHealth
 from app.models.user import User
 from app.schemas.goal_params import validate_goal_params
 
@@ -93,3 +96,34 @@ async def update_me(
     db.commit()
     db.refresh(db_user)
     return _serialize(db_user)
+
+
+class WeightEntry(BaseModel):
+    weight_kg: float = Field(gt=20, lt=400)
+    day: date | None = None
+
+
+@router.post("/profile/weight")
+async def log_weight(
+    body: WeightEntry,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Manually log a body weight (defaults to today). Upserts the day's row.
+
+    This is the weight-loss loop's input for athletes without a connected
+    scale; Garmin imports never overwrite a manual entry with an empty value.
+    """
+    _get_or_create(db, user)
+    day = body.day or date.today()
+    row = db.execute(
+        select(DailyHealth).where(
+            DailyHealth.user_id == user.id, DailyHealth.day == day
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        row = DailyHealth(user_id=user.id, day=day)
+    row.weight_kg = body.weight_kg
+    db.add(row)
+    db.commit()
+    return {"day": day.isoformat(), "weight_kg": body.weight_kg}

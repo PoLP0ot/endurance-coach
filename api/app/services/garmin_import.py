@@ -133,8 +133,10 @@ def upsert_daily_health(
             "steps": h.steps,
             "body_battery": h.body_battery,
             "stress_avg": h.stress_avg,
-            "weight_kg": h.weight_kg,
         }
+        # Never clobber a manually logged weight with an empty Garmin value.
+        if h.weight_kg is not None:
+            fields["weight_kg"] = h.weight_kg
         if existing is None:
             db.add(DailyHealth(user_id=user_id, day=day, **fields))
         else:

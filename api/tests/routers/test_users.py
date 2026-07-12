@@ -74,3 +74,21 @@ def test_patch_me_rejects_goal_params_wrong_shape(app_client, seed_user):
         json={"primary_goal": "health", "goal_params": {"target_weight_kg": 74.0}},
     )
     assert res.status_code == 422
+
+
+def test_log_weight_upserts_todays_entry(app_client, db_session, seed_user):
+    res = app_client.post("/profile/weight", json={"weight_kg": 88.5})
+    assert res.status_code == 200
+    assert res.json()["weight_kg"] == 88.5
+
+    res = app_client.post("/profile/weight", json={"weight_kg": 88.1})
+    assert res.status_code == 200
+    from app.models.health import DailyHealth
+
+    rows = db_session.query(DailyHealth).filter_by(user_id=seed_user.id).all()
+    assert len(rows) == 1 and rows[0].weight_kg == 88.1
+
+
+def test_log_weight_rejects_absurd_values(app_client, seed_user):
+    assert app_client.post("/profile/weight", json={"weight_kg": 10}).status_code == 422
+    assert app_client.post("/profile/weight", json={"weight_kg": 500}).status_code == 422

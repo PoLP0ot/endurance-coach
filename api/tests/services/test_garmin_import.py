@@ -211,3 +211,28 @@ def test_resolve_since_falls_back_to_lookback_window():
     assert resolve_since(None, date(2026, 6, 1), default_lookback_days=30) == date(
         2026, 5, 2
     )
+
+
+def test_health_upsert_keeps_manual_weight_when_garmin_has_none(db_session, seed_user):
+    from datetime import date as _date
+
+    from app.models.health import DailyHealth
+    from app.services.garmin import GarminDailyHealth
+    from app.services.garmin_import import upsert_daily_health
+
+    day = _date(2026, 6, 10)
+    db_session.add(DailyHealth(user_id=seed_user.id, day=day, weight_kg=88.5))
+    db_session.commit()
+
+    upsert_daily_health(
+        db_session,
+        seed_user.id,
+        [
+            GarminDailyHealth(
+                day=day.isoformat(), resting_hr=52, hrv=75.0, sleep_score=80,
+                steps=9000, body_battery=60, stress_avg=30, weight_kg=None,
+            )
+        ],
+    )
+    row = db_session.query(DailyHealth).filter_by(user_id=seed_user.id, day=day).one()
+    assert row.weight_kg == 88.5 and row.resting_hr == 52
