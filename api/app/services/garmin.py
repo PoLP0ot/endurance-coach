@@ -270,7 +270,7 @@ class GarminConnectProvider:
 
         def clean(v: object) -> object | None:
             """Garmin uses -1 as a 'no data' sentinel for several fields."""
-            return None if isinstance(v, (int, float)) and v < 0 else v
+            return None if isinstance(v, int | float) and v < 0 else v
 
         return GarminDailyHealth(
             day=iso,

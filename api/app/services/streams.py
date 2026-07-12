@@ -22,7 +22,7 @@ def _value(metrics: list, idx: dict[str, int], key: str) -> float | None:
     if i is None or i >= len(metrics):
         return None
     v = metrics[i]
-    return float(v) if isinstance(v, (int, float)) else None
+    return float(v) if isinstance(v, int | float) else None
 
 
 def _pace_s_per_km(speed_m_s: float | None) -> float | None:

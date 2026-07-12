@@ -7,6 +7,8 @@ import os
 os.environ.setdefault("SUPABASE_JWT_SECRET", "test-secret-do-not-use-in-prod")
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("ENCRYPTION_KEY", "test-encryption-key-not-for-prod")
+# Tests must never report to Sentry, even when the local .env has a DSN.
+os.environ["SENTRY_DSN"] = ""
 
 import pytest  # noqa: E402
 from app.core.config import settings  # noqa: E402
