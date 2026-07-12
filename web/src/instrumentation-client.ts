@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 // app renders health data and replays would record it.
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  enabled: process.env.NODE_ENV === "production",
   environment: process.env.NODE_ENV,
   tracesSampleRate: 0.1,
   sendDefaultPii: false,

@@ -28,6 +28,7 @@
 - api: `sentry-sdk[fastapi]` via `core/monitoring.init_sentry()` (app + ARQ worker startup)
 - web: `@sentry/nextjs` via `src/instrumentation.ts` + `instrumentation-client.ts` + root `sentry.*.config.ts`
 - Inert until `SENTRY_DSN` (api) / `NEXT_PUBLIC_SENTRY_DSN` (web) are set; `send_default_pii=False`, request bodies never sent, no session replay (health data)
+- web: `enabled: NODE_ENV === "production"` in all three configs — dev server never reports (a local `pnpm dev` EPIPE had polluted Sentry, 2026-07-12)
 - No `withSentryConfig` wrapping — source-map upload needs a Sentry auth token (user-side)
 
 ## Infrastructure
