@@ -5,6 +5,7 @@ from app.models.audit import GdprAuditLog
 from app.models.base import Base
 from app.models.brief import DailyBrief
 from app.models.chat import ChatMessage
+from app.models.exercise import Exercise
 from app.models.garmin import GarminConnection
 from app.models.health import DailyHealth
 from app.models.import_job import ImportJob
@@ -26,4 +27,5 @@ __all__ = [
     "Subscription",
     "GdprAuditLog",
     "DailyBrief",
+    "Exercise",
 ]

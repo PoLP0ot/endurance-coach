@@ -103,6 +103,74 @@ du lundi le mentionne (fact déterministe, le LLM narre).
 Backoff sur `import_garmin_activities` (max_tries=3), idempotence déjà en place.
 
 ---
+
+# EPIC MUSCU — séances de renforcement (weight loss / hyrox)
+
+Source de données : `hasaneyldrm/exercises-dataset` (1 324 exercices, JSON MIT).
+Médias (GIF/images 180×180) © Gym Visual — usage accepté par le fondateur tant
+que l'app n'est pas commercialisée ; **à re-trancher (licence ou dataset libre)
+avant la mise en vente**. Les GIFs ne sont PAS vendorisés (repo 127 Mo) : ils
+sont servis via CDN `cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/…`.
+Invariant conservé : composition de séance déterministe, le LLM narre.
+
+## M1 — Bibliothèque d'exercices (data + API) `[ ]`
+- Modèle `Exercise` (migration 0012) : id, name, body_part, target,
+  muscle_group, secondary_muscles (JSON), equipment, instructions (steps EN),
+  image_url, gif_url, attribution.
+- Script de seed `api/scripts/seed_exercises.py` (télécharge
+  `data/exercises.json`, upsert idempotent).
+- `GET /exercises` : filtres body_part/target/equipment/recherche texte,
+  pagination keyset ; accessible free.
+- pytest (seed idempotent sur fixture réduite, filtres, pagination).
+
+## M2 — Bibliothèque d'exercices (UI) `[ ]`
+- Page `/exercises` : recherche + filtres (groupe musculaire, équipement),
+  cards avec GIF lazy-loadé ; détail : GIF, muscles cible/secondaires,
+  instructions pas-à-pas.
+- États loading/empty/error ; vitest.
+
+## M3 — Programme muscu LONG TERME généré avec le coach `[ ]`
+Pas des séances isolées : un programme périodisé multi-semaines, comme les
+plans endurance existants.
+- Modèle `StrengthPlan` (migration 0013) : user_id, goal_kind, weeks (8–16),
+  frequency (2–4 séances/sem), equipment profile, level, structure JSON —
+  blocs périodisés (adaptation → volume/hypertrophie → force → deload),
+  chaque semaine contient ses séances
+  `[{day, focus (full/upper/lower), items: [{exercise_id, sets, reps,
+  target_weight_kg|rpe, rest_sec}]}]`.
+- Composeur déterministe `services/strength.py` : sélection d'exercices dans
+  la bibliothèque (équipement + muscles), progression planifiée entre
+  semaines (volume puis charge, deload 1 sem/4). Zéro LLM dans les chiffres.
+- `POST /strength/plans` (params : objectif, fréquence, équipement, niveau),
+  `GET /strength/plans/current`.
+- Tool coach `propose_strength_plan` : le chat collecte les params en
+  dialogue, le composeur génère, le LLM présente le programme.
+- UI : page programme (timeline de blocs, semaine courante dépliée en
+  séances), à côté du plan endurance.
+
+## M4 — Mode séance + log des perfs `[ ]`
+- Modèle `StrengthSetLog` (migration 0014) : plan_id, week, day,
+  exercise_id, set_index, weight_kg, reps, rpe (opt), logged_at.
+- Écran « séance du jour » (depuis le programme) : exercice par exercice
+  (GIF), saisie poids×reps par série, chrono de repos, complétion → résumé
+  (volume total, écarts vs prescrit).
+- `POST /strength/logs`, complétion de séance ; séance ratée = visible.
+
+## M5 — Adaptation du programme + intégration coaching `[ ]`
+- Progression pilotée par les perfs réelles (déterministe) : double
+  progression (toutes les séries au haut de la fourchette → +2,5 kg),
+  séances ratées → re-seed des semaines à venir (même mécanique que
+  `adaptation.adapt_plan` endurance, jamais le passé).
+- Historique par exercice : PR, meilleure charge, volume hebdo ; sparkline.
+- `coach_facts` : volume renfo 7j/28j, PRs récents, adhérence programme →
+  brief/chat/today les citent.
+- Adhérence : séance muscu complétée matche une session `strength` du
+  microcycle (weight_loss/hyrox) dans `adherence.match_week`.
+
+Chaque story = un commit, QA gate complet (pytest, vitest, ruff, eslint,
+build, vérification manuelle) avant la suivante.
+
+---
 ### User-blocked (hors code, à faire par le fondateur avant vente)
 - Compte Paddle live + price ids (+ annual) + webhook URL publique.
 - Clé Resend + domaine d'envoi vérifié (DKIM/SPF).

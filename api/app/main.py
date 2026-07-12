@@ -23,6 +23,7 @@ from app.routers import (
     coach,
     dashboard,
     email,
+    exercises,
     garmin,
     gdpr,
     health,
@@ -133,6 +134,7 @@ def create_app() -> FastAPI:
     app.include_router(signals.router)
     app.include_router(coach.router)
     app.include_router(activities.router)
+    app.include_router(exercises.router)
     app.include_router(chat.router)
     app.include_router(plans.router)
     app.include_router(subscriptions.router)

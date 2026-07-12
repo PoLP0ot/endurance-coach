@@ -18,6 +18,29 @@ Second pass same day — S6/S7/S8/S10 shipped too (107 pytest, 79 vitest):
 - Docs/deps: CLAUDE.md + memory corrected (LLM = OpenAI); `anthropic` + `paddle-billing-client` dropped from requirements (unused).
 Remaining backlog: S9 Sentry only (new dep — needs explicit approval). User-blocked launch items in DONE.md.
 
+### Epic MUSCU (2026-07-12) — strength sessions, stories M1–M5 in BACKLOG.md
+Dataset `hasaneyldrm/exercises-dataset` (1,324 exercises, JSON MIT; GIFs © Gym
+Visual — founder accepted use while pre-revenue, MUST re-decide before selling).
+GIFs served from jsDelivr CDN, not vendored (repo is 127 MB). Scope: exercise
+library (M1 data/API, M2 UI), coach session builder with deterministic composer
++ chat tool (M3), in-session set logging weight×reps×RPE (M4), progression +
+coach_facts + adherence integration (M5). M3 rescoped by founder: LONG-TERM
+periodized strength programs (StrengthPlan, blocks adaptation→hypertrophy→
+force→deload), not standalone sessions; M5 = perf-driven progression (double
+progression) reusing the adapt_plan re-seed mechanic.
+**M1 DONE**: `Exercise` model (dataset id PK, migration 0012), idempotent
+`upsert_exercises` + `scripts/seed_exercises.py` (1,324 rows seeded in dev.db),
+`GET /exercises` (body_part/target/equipment/q filters, keyset by name+id) +
+`GET /exercises/{id}` (instructions EN steps), auth required, free tier.
+CDN base in `services/exercises.py::CDN_BASE`. Front URL (real):
+https://endurance-coach-coach8.vercel.app — CORS verified OK against prod API,
+but **Vercel Deployment Protection still ON** (302 → vercel.com/sso-api).
+Prod checks 2026-07-12: API /health 200, 401 clean, 117 pytest + 82 vitest
+green, ruff clean. `endurance-coach.vercel.app` is NOT our project (title
+"Frontend") — real Vercel URL unknown locally; CORS origin unverifiable without
+it. Resend: no `resend._domainkey` TXT on endurancecoach.app yet (domain is on
+Zoho mail) — weekly email from coach@endurancecoach.app still blocked.
+
 ## Previous Phase: BUILD (feature stories)
 
 **Status:** Story 0 committed (scaffold + CI green: pytest, ruff, eslint, vitest, next build all pass). US7a landing page committed.
