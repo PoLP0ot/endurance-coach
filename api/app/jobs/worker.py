@@ -183,10 +183,24 @@ async def generate_daily_briefs(ctx: dict) -> dict:
 
 
 async def startup(ctx: dict) -> None:
-    """Worker startup: share the API's Sentry wiring (no-op without DSN)."""
+    """Worker startup: Sentry wiring + one-time exercise library seed."""
+    import logging
+
     from app.core.monitoring import init_sentry
+    from app.services.exercises import ensure_seeded
 
     init_sentry()
+    db = SessionLocal()
+    try:
+        seeded = ensure_seeded(db)
+        if seeded:
+            logging.getLogger("app.worker").info(
+                "exercise library seeded", extra={"count": seeded}
+            )
+    except Exception:  # noqa: BLE001 — a failed seed must not kill the worker
+        logging.getLogger("app.worker").exception("exercise seed failed")
+    finally:
+        db.close()
 
 
 class WorkerSettings:

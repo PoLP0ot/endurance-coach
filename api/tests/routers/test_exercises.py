@@ -36,3 +36,9 @@ def test_exercise_detail_unknown_is_404(app_client, db_session):
 
 def test_list_requires_auth(client):
     assert client.get("/exercises").status_code == 401
+
+
+def test_health_data_reports_seeded_count(app_client, db_session):
+    assert app_client.get("/health/data").json() == {"exercises": 0}
+    upsert_exercises(db_session, RAW)
+    assert app_client.get("/health/data").json() == {"exercises": 3}

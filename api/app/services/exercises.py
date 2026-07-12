@@ -14,6 +14,10 @@ from sqlalchemy.orm import Session
 from app.models.exercise import Exercise
 
 CDN_BASE = "https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/"
+DATASET_URL = (
+    "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/"
+    "data/exercises.json"
+)
 DEFAULT_LIMIT = 24
 MAX_LIMIT = 100
 
@@ -52,6 +56,32 @@ def upsert_exercises(db: Session, records: Iterable[dict]) -> int:
         count += 1
     db.commit()
     return count
+
+
+def fetch_dataset(url: str = DATASET_URL) -> list[dict]:
+    """Download the exercises dataset JSON."""
+    import httpx
+
+    response = httpx.get(url, timeout=120, follow_redirects=True)
+    response.raise_for_status()
+    return response.json()
+
+
+def count_exercises(db: Session) -> int:
+    from sqlalchemy import func
+
+    return int(db.execute(select(func.count(Exercise.id))).scalar() or 0)
+
+
+def ensure_seeded(db: Session) -> int:
+    """Seed the library from the dataset when the table is empty.
+
+    Returns the number of records seeded (0 when already populated). Lets any
+    download/DB error propagate so callers decide how loudly to fail.
+    """
+    if count_exercises(db) > 0:
+        return 0
+    return upsert_exercises(db, fetch_dataset())
 
 
 def _encode_cursor(name: str, exercise_id: str) -> str:

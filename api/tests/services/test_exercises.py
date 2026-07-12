@@ -95,3 +95,18 @@ def test_keyset_pagination_walks_all_without_duplicates(db_session):
             break
     assert sorted(seen) == ["0001", "0002", "0003"]
     assert len(seen) == len(set(seen))
+
+
+def test_ensure_seeded_only_when_empty(db_session, monkeypatch):
+    import app.services.exercises as svc
+
+    calls = []
+
+    def fake_fetch(url=svc.DATASET_URL):
+        calls.append(url)
+        return RAW
+
+    monkeypatch.setattr(svc, "fetch_dataset", fake_fetch)
+    assert svc.ensure_seeded(db_session) == 3
+    assert svc.ensure_seeded(db_session) == 0  # populated -> no fetch, no write
+    assert len(calls) == 1
