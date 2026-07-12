@@ -51,3 +51,33 @@ def test_get_adherence_handles_no_plan(db_session, seed_user):
 def test_unknown_tool_is_reported(db_session, seed_user):
     out = run_tool(db_session, seed_user.id, TODAY, "frobnicate", {})
     assert "unknown_tool" in out["error"]
+
+
+def test_propose_strength_plan_creates_the_program(db_session, seed_user):
+    from app.services.strength import current_strength_plan
+
+    from tests.services.test_strength import seed_library
+
+    seed_library(db_session)
+    out = run_tool(
+        db_session,
+        seed_user.id,
+        TODAY,
+        "propose_strength_plan",
+        {"frequency": 3, "weeks": 8, "level": "beginner", "equipment": ["body weight"]},
+    )
+    assert out["status"] == "created"
+    assert out["weeks"] == 8 and out["frequency"] == 3
+    plan = current_strength_plan(db_session, seed_user.id)
+    assert plan is not None and len(plan.structure["weeks"]) == 8
+
+
+def test_propose_strength_plan_rejects_bad_params(db_session, seed_user):
+    out = run_tool(
+        db_session,
+        seed_user.id,
+        TODAY,
+        "propose_strength_plan",
+        {"frequency": 9, "weeks": 8, "level": "beginner", "equipment": ["body weight"]},
+    )
+    assert "error" in out

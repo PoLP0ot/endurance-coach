@@ -129,7 +129,7 @@ Invariant conservé : composition de séance déterministe, le LLM narre.
   instructions pas-à-pas.
 - États loading/empty/error ; vitest.
 
-## M3 — Programme muscu LONG TERME généré avec le coach `[ ]`
+## M3 — Programme muscu LONG TERME généré avec le coach `[x]`
 Pas des séances isolées : un programme périodisé multi-semaines, comme les
 plans endurance existants.
 - Modèle `StrengthPlan` (migration 0013) : user_id, goal_kind, weeks (8–16),

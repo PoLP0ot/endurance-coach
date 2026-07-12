@@ -56,6 +56,35 @@ TOOL_SPECS = [
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "propose_strength_plan",
+            "description": (
+                "Compose and activate a periodized strength program from the "
+                "exercise library. Ask the athlete for their weekly frequency, "
+                "program length, level and available equipment first."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "frequency": {"type": "integer", "minimum": 2, "maximum": 4},
+                    "weeks": {"type": "integer", "minimum": 8, "maximum": 16},
+                    "level": {
+                        "type": "string",
+                        "enum": ["beginner", "intermediate", "advanced"],
+                    },
+                    "equipment": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "description": "e.g. body weight, dumbbell, barbell, cable",
+                    },
+                },
+                "required": ["frequency", "weeks", "level", "equipment"],
+            },
+        },
+    },
 ]
 
 
@@ -106,4 +135,42 @@ def run_tool(
         return {"health": facts["health"], "trend": facts["trend"]}
     if name == "get_adherence":
         return _adherence(db, user_id, today)
+    if name == "propose_strength_plan":
+        return _propose_strength_plan(db, user_id, today, args)
     return {"error": f"unknown_tool:{name}"}
+
+
+def _propose_strength_plan(
+    db: Session, user_id: str, today: date, args: dict
+) -> dict:
+    from app.services.strength import create_strength_plan
+
+    try:
+        plan = create_strength_plan(
+            db,
+            user_id,
+            frequency=int(args["frequency"]),
+            weeks=int(args["weeks"]),
+            level=str(args["level"]),
+            equipment=list(args["equipment"]),
+            start_date=today,
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        return {"error": f"invalid_params:{exc}"}
+    first_week = plan.structure["weeks"][0]
+    return {
+        "status": "created",
+        "weeks": plan.weeks,
+        "frequency": plan.frequency,
+        "level": plan.level,
+        "equipment": plan.equipment,
+        "blocks": plan.structure["blocks"],
+        "first_week_sessions": [
+            {
+                "day": s["day"],
+                "title": s["title"],
+                "exercises": [i["name"] for i in s["items"]],
+            }
+            for s in first_week["sessions"]
+        ],
+    }

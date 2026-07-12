@@ -38,6 +38,18 @@ selects from `schemas/exercise.ts` const lists mirroring the dataset, card grid
 with eager-first-8/lazy thumbnails) + `/exercises/[id]` sheet (GIF, muscles,
 instruction steps, attribution). Sidebar nav "Exercises" (mobile: false).
 Playwright fixtures + routes added to authed.spec.ts (real CDN media).
+**M3 DONE**: `StrengthPlan` model (migration 0013), composer
+`services/strength.py` (blocks adaptation 2wk → hypertrophy → strength
+weeks//4, deload every 4th wk, BLOCKS dict sets/reps/rpe/rest, level ±1 set,
+FREQUENCY_LAYOUT 2=full A/B,3=full/upper/lower,4=UL×2, slots by target with
+fallback lists, body weight always allowed, A/B variant rotates candidates,
+deterministic). `POST /strength/plans` + `GET /strength/plans/current`
+(premium, rate-limited "plans"). Coach tool `propose_strength_plan` in
+coach_tools (creates active plan, returns summary; asks freq/weeks/level/
+equipment in dialogue per TOOL_SPECS description). UI `/strength` (nav Weight
+icon, mobile:false): setup form (freq/weeks/level selects + equipment toggle
+chips) or program view (chips, block bar, current week sessions with RPE/rest,
+all-weeks list). Loads start None — M5 fills from logs.
 Founder decision: Vercel Deployment Protection stays ON pre-launch (email
 confirmation links + beta testers blocked until then) — launch-checklist item.
 Front URL (real):

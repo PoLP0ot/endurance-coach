@@ -29,6 +29,7 @@ from app.routers import (
     health,
     plans,
     signals,
+    strength,
     subscriptions,
     users,
 )
@@ -137,6 +138,7 @@ def create_app() -> FastAPI:
     app.include_router(exercises.router)
     app.include_router(chat.router)
     app.include_router(plans.router)
+    app.include_router(strength.router)
     app.include_router(subscriptions.router)
     app.include_router(email.router)
     app.include_router(users.router)
