@@ -59,6 +59,17 @@ TOOL_SPECS = [
     {
         "type": "function",
         "function": {
+            "name": "get_strength_progress",
+            "description": (
+                "The athlete's strength program status: current week, sessions "
+                "and volume this week, personal records."
+            ),
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "propose_strength_plan",
             "description": (
                 "Compose and activate a periodized strength program from the "
@@ -115,7 +126,11 @@ def _adherence(db: Session, user_id: str, today: date) -> dict:
     week = current_week(plan.structure, today)
     if week is None:
         return {"status": "no_current_week"}
-    activities = _recent_activities(db, user_id, 20)
+    from app.services.strength_progress import strength_completions_as_activities
+
+    activities = _recent_activities(db, user_id, 20) + strength_completions_as_activities(
+        db, user_id
+    )
     match = match_week(week, activities, today)
     return {"status": "ok", "week": week.get("week"), **week_adherence(match)}
 
@@ -137,6 +152,10 @@ def run_tool(
         return _adherence(db, user_id, today)
     if name == "propose_strength_plan":
         return _propose_strength_plan(db, user_id, today, args)
+    if name == "get_strength_progress":
+        from app.services.strength_progress import strength_facts
+
+        return strength_facts(db, user_id, today)
     return {"error": f"unknown_tool:{name}"}
 
 

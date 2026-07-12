@@ -12,6 +12,7 @@ import {
   type SessionSummary,
   type StrengthItem,
   type StrengthSession,
+  type Suggestion,
 } from "@/schemas/strength";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -25,14 +26,20 @@ type SetsState = Record<string, SetEntry>;
 
 const setKey = (exerciseId: string, index: number) => `${exerciseId}:${index}`;
 
-function initialSets(session: StrengthSession, logged: Map<string, { weight_kg: number | null; reps: number }>): SetsState {
+function initialSets(
+  session: StrengthSession,
+  logged: Map<string, { weight_kg: number | null; reps: number }>,
+  suggestions: Record<string, Suggestion>,
+): SetsState {
   const state: SetsState = {};
   for (const item of session.items) {
+    const suggested = suggestions[item.exercise_id]?.weight_kg;
     for (let i = 1; i <= item.sets; i += 1) {
       const key = setKey(item.exercise_id, i);
       const existing = logged.get(key);
+      const weight = existing?.weight_kg ?? suggested;
       state[key] = {
-        weight: existing?.weight_kg != null ? String(existing.weight_kg) : "",
+        weight: weight != null ? String(weight) : "",
         reps: String(existing?.reps ?? item.reps),
         logged: existing !== undefined,
         saving: false,
@@ -47,6 +54,7 @@ export function SessionRunner({ week, day }: { week: number; day: number }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [session, setSession] = useState<StrengthSession | null>(null);
   const [sets, setSets] = useState<SetsState>({});
+  const [suggestions, setSuggestions] = useState<Record<string, Suggestion>>({});
   const [restLeft, setRestLeft] = useState<number | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [summary, setSummary] = useState<SessionSummary | null>(null);
@@ -74,7 +82,8 @@ export function SessionRunner({ week, day }: { week: number; day: number }) {
         logs.sets.map((s) => [setKey(s.exercise_id, s.set_index), s]),
       );
       setSession(found);
-      setSets(initialSets(found, logged));
+      setSuggestions(logs.suggestions);
+      setSets(initialSets(found, logged, logs.suggestions));
       if (logs.summary.completed) setSummary(logs.summary);
       setPhase("ready");
     } catch (err) {
@@ -232,6 +241,12 @@ export function SessionRunner({ week, day }: { week: number; day: number }) {
                 <p className="text-xs text-muted-foreground">
                   {item.sets} × {item.reps} @ RPE {item.rpe} · rest {item.rest_sec}s
                 </p>
+                {suggestions[item.exercise_id]?.last && (
+                  <p className="text-xs text-muted-foreground">
+                    Last: {suggestions[item.exercise_id].last?.weight_kg ?? "—"} kg
+                    × {suggestions[item.exercise_id].last?.reps}
+                  </p>
+                )}
               </div>
             </div>
             <ul className="divide-y divide-line">

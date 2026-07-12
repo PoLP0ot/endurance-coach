@@ -104,6 +104,27 @@ describe("StrengthView (M3)", () => {
     expect(screen.getByText(/hypertrophy/i)).toBeInTheDocument();
   });
 
+  it("shows exercise progress with PR and last performance", async () => {
+    apiFetch
+      .mockResolvedValueOnce({ plan })
+      .mockResolvedValueOnce({
+        exercises: [
+          {
+            exercise_id: "0025",
+            name: "barbell bench press",
+            pr_weight_kg: 45,
+            last_weight_kg: 45,
+            last_reps: 8,
+            sets_logged: 12,
+          },
+        ],
+      });
+    render(<StrengthView />);
+
+    expect(await screen.findByText("Progress")).toBeInTheDocument();
+    expect(screen.getByText(/PR 45 kg/)).toBeInTheDocument();
+  });
+
   it("upsells when the API says premium is required", async () => {
     apiFetch.mockRejectedValueOnce(new ApiError(402, "premium_required"));
     render(<StrengthView />);

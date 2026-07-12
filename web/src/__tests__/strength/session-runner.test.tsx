@@ -140,6 +140,22 @@ describe("SessionRunner (M4)", () => {
     expect(screen.getByText(/400 kg total volume/i)).toBeInTheDocument();
   });
 
+  it("prefills the suggested weight and shows the last performance", async () => {
+    mockRoutes({
+      "GET /strength/logs": {
+        ...emptyLogs,
+        suggestions: {
+          "0025": { weight_kg: 42.5, last: { weight_kg: 40, reps: 10 } },
+        },
+      },
+    });
+    render(<SessionRunner week={1} day={0} />);
+    await screen.findByText("barbell bench press");
+
+    expect(screen.getByLabelText(/set 1 weight/i)).toHaveValue(42.5);
+    expect(screen.getByText(/Last: 40 kg × 10/)).toBeInTheDocument();
+  });
+
   it("says so when the session is not in the program", async () => {
     mockRoutes();
     render(<SessionRunner week={5} day={0} />);

@@ -27,6 +27,7 @@ from app.services.strength_logs import (
     session_logs,
     session_summary,
 )
+from app.services.strength_progress import exercise_history, suggest_weights
 
 router = APIRouter(prefix="/strength", tags=["strength"])
 
@@ -153,7 +154,18 @@ async def get_session_logs(
     return {
         "sets": session_logs(db, user.id, plan.id, week=week, day=day),
         "summary": summary,
+        "suggestions": suggest_weights(db, user.id, plan, week=week, day=day),
     }
+
+
+@router.get("/history")
+async def get_exercise_history(
+    user: User = Depends(require_premium),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Per-exercise PR and latest performance across the active program."""
+    plan = _require_plan(db, user.id)
+    return {"exercises": exercise_history(db, user.id, plan)}
 
 
 @router.post("/sessions/complete")

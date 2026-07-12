@@ -60,6 +60,20 @@ UI `/strength/session?week=&day=` SessionRunner: per-exercise cards (GIF 64px,
 prescription), set rows kg/reps prefilled, Log per set → sticky rest countdown
 (setInterval), Finish → summary (sets, volume) ; "Start →" links on current
 week in StrengthView. Rehydrates logged sets on load.
+**M5 DONE — epic complete**: `services/strength_progress.py` — suggest_weights
+(double progression: all prescribed sets at prescribed reps → +2.5 kg, else
+hold; per-exercise last-session lookup by (week,day)), exercise_history
+(PR/last per exercise), strength_facts (program summary, sessions_7d,
+volume_7d_kg, top-3 PRs) now in build_coach_facts["strength"] + chat tool
+get_strength_progress. GET /strength/logs returns `suggestions` (prefills
+runner weights + "Last: X kg × Y"); GET /strength/history feeds the Progress
+section on /strength. Adherence: strength completions injected as pseudo-
+activities in coach_tools._adherence; match_week now counts a matched
+activity with tss=None as COMPLETED. Decision: no future-week re-seed —
+success-gated progression is the adaptation; deloads pre-planned.
+No new deps anywhere in the epic. dev.db has migrations 0012–0014 applied.
+Prod note: next push auto-migrates on Railway; run
+`python scripts/seed_exercises.py` once against prod Postgres.
 Founder decision: Vercel Deployment Protection stays ON pre-launch (email
 confirmation links + beta testers blocked until then) — launch-checklist item.
 Front URL (real):

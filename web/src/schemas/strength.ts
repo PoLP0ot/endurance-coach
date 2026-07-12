@@ -72,10 +72,34 @@ export const sessionSummarySchema = z.object({
   completed: z.boolean(),
 });
 
+export const suggestionSchema = z.object({
+  weight_kg: z.number().nullable(),
+  last: z
+    .object({ weight_kg: z.number().nullable(), reps: z.number() })
+    .nullable(),
+});
+
 export const sessionLogsSchema = z.object({
   sets: z.array(loggedSetSchema),
   summary: sessionSummarySchema,
+  suggestions: z.record(z.string(), suggestionSchema).default({}),
 });
+
+export const exerciseHistorySchema = z.object({
+  exercises: z.array(
+    z.object({
+      exercise_id: z.string(),
+      name: z.string(),
+      pr_weight_kg: z.number().nullable(),
+      last_weight_kg: z.number().nullable(),
+      last_reps: z.number(),
+      sets_logged: z.number(),
+    }),
+  ),
+});
+
+export type Suggestion = z.infer<typeof suggestionSchema>;
+export type ExerciseHistory = z.infer<typeof exerciseHistorySchema>;
 
 export type SessionSummary = z.infer<typeof sessionSummarySchema>;
 export type StrengthItem = z.infer<typeof strengthItemSchema>;

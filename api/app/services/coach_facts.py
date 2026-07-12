@@ -12,6 +12,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.services.dashboard import build_dashboard
+from app.services.strength_progress import strength_facts
 
 # How many recent days of the load curve to expose as a trend hint.
 TREND_DAYS = 14
@@ -32,4 +33,5 @@ def build_coach_facts(db: Session, user_id: str, today: date) -> dict:
         "this_week": data["this_week"],
         "totals": data["totals"],
         "trend": [{"date": p["date"], "ctl": p["ctl"], "tsb": p["tsb"]} for p in tail],
+        "strength": strength_facts(db, user_id, today),
     }

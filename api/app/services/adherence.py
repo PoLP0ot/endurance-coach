@@ -46,11 +46,17 @@ def match_week(week: dict, activities: list[dict], today: date) -> dict:
         )
         if match_idx is not None:
             used[match_idx] = True
-            actual = activities[match_idx].get("tss") or 0.0
-            status = (
-                COMPLETED if target == 0 or actual >= _COMPLETE_FRACTION * target else PARTIAL
-            )
-            load_delta = round(actual - target, 1)
+            actual = activities[match_idx].get("tss")
+            if actual is None:
+                # No load data (e.g. a logged strength session): done is done.
+                status, load_delta = COMPLETED, 0.0
+            else:
+                status = (
+                    COMPLETED
+                    if target == 0 or actual >= _COMPLETE_FRACTION * target
+                    else PARTIAL
+                )
+                load_delta = round(actual - target, 1)
         elif day <= today:
             status, load_delta = MISSED, round(-target, 1)
         else:

@@ -13,7 +13,8 @@ from app.models.strength_log import StrengthSessionDone, StrengthSetLog
 from app.models.strength_plan import StrengthPlan
 
 
-def _find_session(plan: StrengthPlan, week: int, day: int) -> dict:
+def find_session(plan: StrengthPlan, week: int, day: int) -> dict:
+    """The prescribed session at (week, day), or ``ValueError`` if absent."""
     for plan_week in plan.structure["weeks"]:
         if plan_week["week"] != week:
             continue
@@ -37,7 +38,7 @@ def log_set(
     rpe: float | None = None,
 ) -> dict:
     """Record (or correct) one performed set of a prescribed session."""
-    session = _find_session(plan, week, day)
+    session = find_session(plan, week, day)
     if exercise_id not in {item["exercise_id"] for item in session["items"]}:
         raise ValueError("unknown_exercise")
 
@@ -113,7 +114,7 @@ def session_summary(
     db: Session, user_id: str, plan: StrengthPlan, *, week: int, day: int
 ) -> dict:
     """Prescribed vs performed for one session: sets, volume, completion."""
-    session = _find_session(plan, week, day)
+    session = find_session(plan, week, day)
     logs = session_logs(db, user_id, plan.id, week=week, day=day)
     volume = sum((log["weight_kg"] or 0.0) * log["reps"] for log in logs)
     return {
@@ -131,7 +132,7 @@ def complete_session(
     db: Session, user_id: str, plan: StrengthPlan, *, week: int, day: int
 ) -> dict:
     """Mark a session done (idempotent) and return its summary."""
-    _find_session(plan, week, day)
+    find_session(plan, week, day)
     if not _is_completed(db, plan.id, week, day):
         db.add(
             StrengthSessionDone(

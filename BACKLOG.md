@@ -156,16 +156,20 @@ plans endurance existants.
   (volume total, écarts vs prescrit).
 - `POST /strength/logs`, complétion de séance ; séance ratée = visible.
 
-## M5 — Adaptation du programme + intégration coaching `[ ]`
+## M5 — Adaptation du programme + intégration coaching `[x]`
 - Progression pilotée par les perfs réelles (déterministe) : double
-  progression (toutes les séries au haut de la fourchette → +2,5 kg),
-  séances ratées → re-seed des semaines à venir (même mécanique que
-  `adaptation.adapt_plan` endurance, jamais le passé).
-- Historique par exercice : PR, meilleure charge, volume hebdo ; sparkline.
-- `coach_facts` : volume renfo 7j/28j, PRs récents, adhérence programme →
-  brief/chat/today les citent.
-- Adhérence : séance muscu complétée matche une session `strength` du
-  microcycle (weight_loss/hyrox) dans `adherence.match_week`.
+  progression (toutes les séries prescrites au nombre de reps prescrit →
+  +2,5 kg à la séance suivante, sinon la charge tient). **Décision** : pas de
+  re-seed des semaines à venir — la progression conditionnée au succès EST
+  l'adaptation (échec → charge maintenue), et les deloads sont déjà planifiés
+  par le composeur.
+- Historique par exercice : PR, dernière perf, section « Progress » sur la
+  page programme ; « Last: X kg × Y » et charge suggérée préremplie en séance.
+- `coach_facts["strength"]` : programme (semaine courante), séances + volume
+  7 j, top PRs → brief/chat/email les citent ; tool chat
+  `get_strength_progress`.
+- Adhérence : séance muscu complétée = pseudo-activité `strength` injectée
+  dans `match_week` (une activité matchée sans TSS compte complétée).
 
 Chaque story = un commit, QA gate complet (pytest, vitest, ruff, eslint,
 build, vérification manuelle) avant la suivante.

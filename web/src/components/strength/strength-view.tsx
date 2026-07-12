@@ -10,8 +10,10 @@ import {
   STRENGTH_FREQUENCY_OPTIONS,
   STRENGTH_LEVELS,
   STRENGTH_WEEK_OPTIONS,
+  exerciseHistorySchema,
   strengthCurrentSchema,
   strengthPlanSchema,
+  type ExerciseHistory,
   type StrengthPlan,
   type StrengthWeek,
 } from "@/schemas/strength";
@@ -221,14 +223,24 @@ function WeekDetail({ week }: { week: StrengthWeek }) {
 export function StrengthView() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [plan, setPlan] = useState<StrengthPlan | null>(null);
+  const [history, setHistory] = useState<ExerciseHistory["exercises"]>([]);
 
   const load = useCallback(async () => {
     setPhase("loading");
     try {
       const token = await getAccessToken();
       const raw = await apiFetch<unknown>("/strength/plans/current", { token });
-      setPlan(strengthCurrentSchema.parse(raw).plan);
+      const current = strengthCurrentSchema.parse(raw).plan;
+      setPlan(current);
       setPhase("ready");
+      if (current !== null) {
+        try {
+          const rawHistory = await apiFetch<unknown>("/strength/history", { token });
+          setHistory(exerciseHistorySchema.parse(rawHistory).exercises);
+        } catch {
+          setHistory([]);
+        }
+      }
     } catch (err) {
       setPhase(err instanceof ApiError && err.status === 402 ? "premium" : "error");
     }
@@ -318,6 +330,31 @@ export function StrengthView() {
             <p className="text-sm text-muted-foreground">{week.focus}</p>
           </div>
           <WeekDetail week={week} />
+        </section>
+      )}
+
+      {history.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="font-display text-sm font-semibold text-ink">Progress</h3>
+          <ul className="divide-y divide-line rounded border border-line bg-card">
+            {history.map((entry) => (
+              <li
+                key={entry.exercise_id}
+                className="flex items-center justify-between gap-3 px-4 py-2 text-sm"
+              >
+                <Link
+                  href={`/exercises/${entry.exercise_id}`}
+                  className="truncate text-ink underline-offset-4 hover:underline"
+                >
+                  {entry.name}
+                </Link>
+                <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                  {entry.pr_weight_kg !== null && `PR ${entry.pr_weight_kg} kg · `}
+                  last {entry.last_weight_kg ?? "—"} kg × {entry.last_reps}
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

@@ -60,3 +60,13 @@ def test_unmatched_activity_is_an_extra():
     match = match_week(WEEK, activities, today)
     assert len(match["extras"]) == 1
     assert week_adherence(match)["extras"] == 1
+
+
+def test_matched_activity_without_tss_counts_completed():
+    week = {
+        "start_date": "2026-07-06",
+        "sessions": [{"day_index": 0, "kind": "strength", "target_tss": 50.0}],
+    }
+    activities = [{"date": "2026-07-06T18:00:00+00:00", "tss": None}]
+    match = match_week(week, activities, date(2026, 7, 8))
+    assert match["sessions"][0]["status"] == COMPLETED
