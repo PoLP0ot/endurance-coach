@@ -30,7 +30,11 @@ def _current_week_index(weeks: list[dict], today: date) -> int:
 
 
 def adapt_plan(
-    structure: dict, current_ctl: float, adherence_pct: int | None, today: date
+    structure: dict,
+    current_ctl: float,
+    adherence_pct: int | None,
+    today: date,
+    goal_params: dict | None = None,
 ) -> dict:
     """Recompute upcoming weeks in place from current CTL + adherence.
 
@@ -73,7 +77,8 @@ def adapt_plan(
             week["sessions"] = [
                 s
                 for d in range(7)
-                if (s := definition.daily_session_template(week, d)) is not None
+                if (s := definition.daily_session_template(week, d, goal_params))
+                is not None
             ]
             changed += 1
 

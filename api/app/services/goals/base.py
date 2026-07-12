@@ -54,9 +54,12 @@ class GoalDefinition(Protocol):
         """Goal-specific dashboard payload: ``{kind, panels: [...]}``."""
         ...
 
-    def daily_session_template(self, week: dict, day_index: int) -> dict | None:
+    def daily_session_template(
+        self, week: dict, day_index: int, goal_params: dict | None = None
+    ) -> dict | None:
         """A prescribed session for ``day_index`` (0=Mon) of a plan week, or None
-        for a rest day. Used by the plan builder (Phase C)."""
+        for a rest day. ``goal_params`` lets a goal shape the microcycle around
+        the athlete's declared constraints. Used by the plan builder (Phase C)."""
         ...
 
 

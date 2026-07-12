@@ -142,3 +142,58 @@ def test_daily_session_template_distributes_week_tss():
     assert all(s["prescription"] for s in active)
     # Even split sums back near the weekly target.
     assert abs(sum(s["target_tss"] for s in active) - 350.0) < 1.0
+
+
+def test_weight_loss_deadline_drives_the_band():
+    defn = get_goal_definition("weight_loss")
+    # Losing 0.35 kg/week from 90 kg toward 80 kg → ETA ≈ +200 days.
+    series = [
+        {"day": (TODAY - timedelta(days=20 - i)).isoformat(), "kg": 90 - 0.05 * i}
+        for i in range(21)
+    ]
+    late = defn.progress(
+        _ctx(
+            goal_params={
+                "target_weight_kg": 80.0,
+                "target_date": (TODAY + timedelta(days=60)).isoformat(),
+            },
+            weight_series=series,
+        )
+    )
+    assert late["target_date"] == (TODAY + timedelta(days=60)).isoformat()
+    assert late["on_track_band"] == "at_risk"
+    assert late["required_rate_kg_per_week"] is not None
+    assert "deadline" in late["headline"].lower() or "target date" in late["headline"].lower()
+
+    on_time = defn.progress(
+        _ctx(
+            goal_params={
+                "target_weight_kg": 80.0,
+                "target_date": (TODAY + timedelta(days=365)).isoformat(),
+            },
+            weight_series=series,
+        )
+    )
+    assert on_time["on_track_band"] == ON_TRACK
+
+
+def test_weight_loss_microcycle_respects_availability():
+    defn = get_goal_definition("weight_loss")
+    week = {"target_tss": 90.0}
+
+    three = [
+        s
+        for d in range(7)
+        if (s := defn.daily_session_template(week, d, {"weekly_activity_target": 3}))
+        is not None
+    ]
+    assert len(three) == 3
+    assert {s["kind"] for s in three} == {"easy", "strength", "long"}
+
+    default = [
+        s
+        for d in range(7)
+        if (s := defn.daily_session_template(week, d)) is not None
+    ]
+    assert len(default) == 6
+    assert sum(1 for s in default if s["kind"] == "strength") == 2

@@ -119,6 +119,8 @@ class MarathonGoal:
     def dashboard_variant(self, ctx: GoalContext) -> dict:
         return {"kind": self.kind, "panels": self.primary_metrics(ctx)}
 
-    def daily_session_template(self, week: dict, day_index: int) -> dict | None:
+    def daily_session_template(
+        self, week: dict, day_index: int, goal_params: dict | None = None
+    ) -> dict | None:
         micro = _MICRO.get(week.get("phase", "base"), _MICRO["base"])
         return session_from_microcycle(week, day_index, micro)

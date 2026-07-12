@@ -78,5 +78,7 @@ class TriathlonGoal:
     def dashboard_variant(self, ctx: GoalContext) -> dict:
         return {"kind": self.kind, "panels": self.primary_metrics(ctx)}
 
-    def daily_session_template(self, week: dict, day_index: int) -> dict | None:
+    def daily_session_template(
+        self, week: dict, day_index: int, goal_params: dict | None = None
+    ) -> dict | None:
         return session_from_microcycle(week, day_index, _MICRO)

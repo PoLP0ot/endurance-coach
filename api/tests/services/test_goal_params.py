@@ -36,3 +36,10 @@ def test_out_of_range_rejected():
         validate_goal_params("health", {"weekly_activity_target": 9})
     with pytest.raises(ValueError):
         validate_goal_params("weight_loss", {"target_weight_kg": 5.0})
+
+
+def test_weight_loss_accepts_target_date():
+    out = validate_goal_params(
+        "weight_loss", {"target_weight_kg": 80, "target_date": "2026-12-31"}
+    )
+    assert out["target_date"] == "2026-12-31"

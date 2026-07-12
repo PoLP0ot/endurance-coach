@@ -32,6 +32,7 @@ class TriathlonParams(_Base):
 
 class WeightLossParams(_Base):
     target_weight_kg: float | None = Field(default=None, gt=20, lt=400)
+    target_date: date | None = None
     weekly_activity_target: int | None = Field(default=None, ge=1, le=7)
 
 

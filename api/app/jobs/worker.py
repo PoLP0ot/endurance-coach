@@ -141,8 +141,13 @@ async def adapt_all_plans(ctx: dict) -> dict:
             facts = build_coach_facts(db, plan.user_id, date.today())
             today_info = todays_session(db, plan.user_id, date.today())
             adherence_pct = (today_info.get("adherence") or {}).get("adherence_pct")
+            plan_user = db.get(User, plan.user_id)
             summary = adapt_plan(
-                plan.structure, facts["fitness"]["ctl"], adherence_pct, date.today()
+                plan.structure,
+                facts["fitness"]["ctl"],
+                adherence_pct,
+                date.today(),
+                goal_params=plan_user.goal_params if plan_user is not None else None,
             )
             flag_modified(plan, "structure")
             db.add(plan)

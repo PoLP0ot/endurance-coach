@@ -19,15 +19,22 @@ from app.services.goals.base import (
 _MIN_RATE = 0.25
 _MAX_RATE = 1.0
 
-_MICRO = [
-    ("easy", "Easy aerobic 40 min"),
-    ("steps", "Active day · 10k steps"),
-    ("easy", "Easy aerobic 45 min"),
-    ("tempo", "Tempo 25 min to lift the burn"),
-    ("steps", "Active day · 10k steps"),
-    ("long", "Long easy session 60 min"),
-    ("rest", ""),
-]
+_E40 = ("easy", "Easy aerobic 40 min")
+_E45 = ("easy", "Easy aerobic 45 min")
+_TEMPO = ("tempo", "Tempo 25 min to lift the burn")
+_LONG = ("long", "Long easy session 60 min")
+_STRENGTH = ("strength", "Strength session — follow your strength program")
+_REST = ("rest", "")
+
+# Default cadence mixes cardio and strength; muscle preserved in a deficit.
+_DEFAULT_MICRO = [_E40, _STRENGTH, _E45, _TEMPO, _STRENGTH, _LONG, _REST]
+
+# Availability-shaped microcycles (weekly_activity_target → 7-day layout).
+_MICRO_BY_DAYS: dict[int, list[tuple[str, str]]] = {
+    3: [_E45, _REST, _STRENGTH, _REST, _REST, _LONG, _REST],
+    4: [_E40, _STRENGTH, _REST, _STRENGTH, _REST, _LONG, _REST],
+    5: [_E40, _STRENGTH, _TEMPO, _REST, _STRENGTH, _LONG, _REST],
+}
 
 
 class WeightLossGoal:
@@ -47,11 +54,20 @@ class WeightLossGoal:
 
     def progress(self, ctx: GoalContext) -> dict:
         target = ctx.goal_params.get("target_weight_kg")
+        deadline_iso = ctx.goal_params.get("target_date")
+        deadline = date.fromisoformat(deadline_iso) if deadline_iso else None
         series = ctx.weight_series
         current = series[-1]["kg"] if series else None
         baseline = series[0]["kg"] if series else None
         trend = self._trend(ctx)
         rate_per_week = round(trend[0] * 7, 2) if trend else None  # negative = losing
+
+        # Deterministic pace demanded by the deadline, if one is set.
+        required_rate = None
+        if target is not None and current is not None and deadline is not None:
+            days_left = (deadline - ctx.today).days
+            if days_left > 0 and current > target:
+                required_rate = round((current - target) / (days_left / 7.0), 2)
 
         band = NO_TARGET
         eta = None
@@ -65,15 +81,31 @@ class WeightLossGoal:
                 band = OFF_TRACK
                 headline = "Weight isn't trending down yet — let's tighten consistency."
             else:
-                if losing_per_week < _MIN_RATE:
-                    band, headline = AT_RISK, "Losing slowly — a touch more volume would help."
-                elif losing_per_week > _MAX_RATE:
+                days = to_lose / (losing_per_week / 7)
+                eta_date = ctx.today + timedelta(days=round(days))
+                eta = eta_date.isoformat()
+                if losing_per_week > _MAX_RATE:
                     band, headline = AT_RISK, "Dropping fast — ease off to protect muscle."
+                elif deadline is not None:
+                    if eta_date <= deadline:
+                        band = ON_TRACK
+                        headline = (
+                            f"On track — losing {losing_per_week:.2f} kg/week, "
+                            f"on pace for your {deadline_iso} deadline."
+                        )
+                    else:
+                        band = AT_RISK
+                        headline = (
+                            f"At this rate you'll hit {target:g} kg around {eta} — "
+                            f"past your deadline ({deadline_iso})."
+                        )
+                        if required_rate is not None:
+                            headline += f" You need {required_rate:.2f} kg/week."
+                elif losing_per_week < _MIN_RATE:
+                    band, headline = AT_RISK, "Losing slowly — a touch more volume would help."
                 else:
                     band = ON_TRACK
                     headline = f"On track — losing {losing_per_week:.2f} kg/week."
-                days = to_lose / (losing_per_week / 7)
-                eta = (ctx.today + timedelta(days=round(days))).isoformat()
 
         return {
             "kind": self.kind,
@@ -81,7 +113,9 @@ class WeightLossGoal:
             "baseline": baseline,
             "current": current,
             "target": target,
+            "target_date": deadline_iso,
             "rate_kg_per_week": rate_per_week,
+            "required_rate_kg_per_week": required_rate,
             "on_track_band": band,
             "headline": headline,
             "eta": eta,
@@ -102,5 +136,9 @@ class WeightLossGoal:
     def dashboard_variant(self, ctx: GoalContext) -> dict:
         return {"kind": self.kind, "panels": self.primary_metrics(ctx)}
 
-    def daily_session_template(self, week: dict, day_index: int) -> dict | None:
-        return session_from_microcycle(week, day_index, _MICRO)
+    def daily_session_template(
+        self, week: dict, day_index: int, goal_params: dict | None = None
+    ) -> dict | None:
+        target = (goal_params or {}).get("weekly_activity_target")
+        micro = _MICRO_BY_DAYS.get(target, _DEFAULT_MICRO)
+        return session_from_microcycle(week, day_index, micro)

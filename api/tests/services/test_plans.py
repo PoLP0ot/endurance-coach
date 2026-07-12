@@ -61,3 +61,15 @@ def test_weeks_carry_dates_and_goal_focus():
     assert weeks[0]["start_date"] == "2026-07-06"
     assert weeks[1]["start_date"] == "2026-07-13"
     assert all(w["focus"] for w in weeks)
+
+
+def test_build_plan_structure_passes_goal_params_to_sessions():
+    structure = build_plan_structure(
+        "weight_loss",
+        8,
+        date(2026, 7, 13),
+        30.0,
+        goal_params={"weekly_activity_target": 3},
+    )
+    for week in structure["weeks"]:
+        assert len(week["sessions"]) == 3

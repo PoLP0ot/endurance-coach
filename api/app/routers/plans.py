@@ -65,6 +65,7 @@ async def generate_plan(
         start_date=date.today(),
         base_ctl=base_ctl,
         llm=llm,
+        goal_params=user.goal_params if goal == (user.primary_goal or goal) else None,
     )
     return _serialize(plan)
 

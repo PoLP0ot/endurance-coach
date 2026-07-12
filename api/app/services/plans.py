@@ -79,6 +79,7 @@ def build_plan_structure(
     weeks: int,
     start_date: date,
     base_ctl: float,
+    goal_params: dict | None = None,
 ) -> dict:
     """Build a periodized plan: phases, weekly TSS targets, recovery and taper.
 
@@ -122,7 +123,8 @@ def build_plan_structure(
         week["sessions"] = [
             session
             for day in range(7)
-            if (session := definition.daily_session_template(week, day)) is not None
+            if (session := definition.daily_session_template(week, day, goal_params))
+            is not None
         ]
 
     return {"goal": goal, "weeks": plan_weeks}
@@ -156,11 +158,14 @@ def create_plan(
     start_date: date,
     base_ctl: float,
     llm: _Narrator,
+    goal_params: dict | None = None,
 ) -> TrainingPlan:
     """Generate, narrate and persist a plan, archiving any previous active one."""
     from app.services.llm import Task
 
-    structure = build_plan_structure(goal, weeks, start_date, base_ctl)
+    structure = build_plan_structure(
+        goal, weeks, start_date, base_ctl, goal_params=goal_params
+    )
     narrative = llm.narrate(
         Task.PLAN,
         {"goal": goal, "weeks": weeks, "phases": [w["phase"] for w in structure["weeks"]]},
