@@ -72,8 +72,20 @@ activities in coach_tools._adherence; match_week now counts a matched
 activity with tss=None as COMPLETED. Decision: no future-week re-seed —
 success-gated progression is the adaptation; deloads pre-planned.
 No new deps anywhere in the epic. dev.db has migrations 0012–0014 applied.
-Prod note: next push auto-migrates on Railway; run
-`python scripts/seed_exercises.py` once against prod Postgres.
+**Deployed to prod 2026-07-12** (pushed through 903177a): migrations
+0012–0014 applied at boot, `/exercises` + `/strength/*` live (401 clean),
+**1,324 exercises seeded in prod Postgres** — self-seeding via `ensure_seeded`
+runs at BOTH worker startup and API startup (thread, off boot path, test-env
+skipped); `GET /health/data` (public) returns the seeded count for deploy
+verification. ⚠️ Worker service did NOT redeploy on push during ~25 min
+(seed only landed via the API path) — check the worker's GitHub deploy
+trigger in the Railway dashboard; until confirmed, worker crons may run an
+older image after pushes.
+**CI is GREEN for the first time ever** (run 12, bbb03b7): runs 1–11 had
+always failed on 2× UP038 (`isinstance(v, (int, float))`) — local venv had
+ruff 0.15 (rule retired) vs CI's pinned ruff==0.8.4; local venv is now
+downgraded to 0.8.4 to match. conftest forces SENTRY_DSN="" so tests never
+send real Sentry events (local .env has a live DSN).
 Founder decision: Vercel Deployment Protection stays ON pre-launch (email
 confirmation links + beta testers blocked until then) — launch-checklist item.
 Front URL (real):
